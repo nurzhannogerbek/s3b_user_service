@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "UserService"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-l6r53guce7o"
+s3_prefix = "UserService"
+region = "eu-central-1"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "BackendDependenciesStackName=\"BackendDependencies\""
+

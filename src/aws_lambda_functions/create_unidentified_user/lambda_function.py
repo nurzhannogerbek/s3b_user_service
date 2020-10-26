@@ -30,34 +30,20 @@ def lambda_handler(event, context):
             sys.exit(1)
 
     # Define the values of the data passed to the function.
-    user_id = event["arguments"]["input"]["userId"]
     metadata = event["arguments"]["input"]["metadata"]
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
 
-    # Prepare the SQL request that updates information of the specific unidentified user.
+    # Prepare the SQL request that creates the new unidentified user.
     statement = """
-    update
-        unidentified_users
-    set
-        metadata = {0}
-    where
-        unidentified_user_id = (
-            select
-                unidentified_user_id
-            from
-                users
-            where
-                user_id = {1}
-            and
-                unidentified_user_id is not null
-            limit 1
-        );
-    """.format(
-        "'{0}'".format(metadata.replace("'", "''")),
-        "'{0}'".format(user_id)
-    )
+    insert into unidentified_users (
+        metadata
+    ) values (
+        {0}
+    ) returning
+        unidentified_user_id;
+    """.format("'{0}'".format(metadata.replace("'", "''")))
 
     # Execute a previously prepared SQL query.
     try:
@@ -68,6 +54,32 @@ def lambda_handler(event, context):
 
     # After the successful execution of the query commit your changes to the database.
     postgresql_connection.commit()
+
+    # Define the id of the new unidentified user.
+    unidentified_user_id = cursor.fetchone()["unidentified_user_id"]
+
+    # Prepare the SQL request that creates the new user.
+    statement = """
+    insert into users (
+        unidentified_user_id
+    ) values (
+        {0}
+    ) returning
+        user_id;
+    """.format("'{0}'".format(unidentified_user_id))
+
+    # Execute a previously prepared SQL query.
+    try:
+        cursor.execute(statement)
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # After the successful execution of the query commit your changes to the database.
+    postgresql_connection.commit()
+
+    # Define the id of the new user.
+    user_id = cursor.fetchone()["user_id"]
 
     # Prepare the SQL request that returns information about new created unidentified user.
     statement = """

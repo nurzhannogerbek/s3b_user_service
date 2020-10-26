@@ -1,0 +1,278 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Globals:
+  Function:
+    MemorySize: 3008
+    Timeout: 900
+Parameters:
+  BackendDependenciesStackName:
+      Type: String
+      Default: BackendDependencies
+Resources:
+    CreateIdentifiedUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: CreateIdentifiedUser
+            CodeUri: src/aws_lambda_functions/create_identified_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    CreateInternalUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: CreateInternalUser
+            CodeUri: src/aws_lambda_functions/create_internal_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                        Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    CreateOrganization:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: CreateOrganization
+            CodeUri: src/aws_lambda_functions/create_organization
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                        Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    CreateUnidentifiedUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: CreateUnidentifiedUser
+            CodeUri: src/aws_lambda_functions/create_unidentified_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                        Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    UpdateIdentifiedUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: UpdateIdentifiedUser
+            CodeUri: src/aws_lambda_functions/update_identified_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    UpdateInternalUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: UpdateInternalUser
+            CodeUri: src/aws_lambda_functions/update_internal_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    UpdateOrganization:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: UpdateOrganization
+            CodeUri: src/aws_lambda_functions/update_organization
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    UpdateUnidentifiedUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: UpdateUnidentifiedUser
+            CodeUri: src/aws_lambda_functions/update_unidentified_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetCountries:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetCountries
+            CodeUri: src/aws_lambda_functions/get_countries
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetGenders:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetGenders
+            CodeUri: src/aws_lambda_functions/get_genders
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetInternalUser:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetInternalUser
+            CodeUri: src/aws_lambda_functions/get_internal_user
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetInternalUsers:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetInternalUsers
+            CodeUri: src/aws_lambda_functions/get_internal_users
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetRoles:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetRoles
+            CodeUri: src/aws_lambda_functions/get_roles
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+    GetClient:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName: GetClient
+            CodeUri: src/aws_lambda_functions/get_client
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                - Fn::ImportValue:
+                      Fn::Sub: "${BackendDependenciesStackName}:Utils"
+Outputs:
+    CreateIdentifiedUser:
+        Value:
+            Ref:
+                CreateIdentifiedUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:CreateIdentifiedUser"
+    CreateInternalUser:
+        Value:
+            Ref:
+                CreateInternalUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:CreateInternalUser"
+    CreateOrganization:
+        Value:
+            Ref:
+                CreateOrganization
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:CreateOrganization"
+    CreateUnidentifiedUser:
+        Value:
+            Ref:
+                CreateUnidentifiedUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:CreateUnidentifiedUser"
+    UpdateIdentifiedUser:
+        Value:
+            Ref:
+                UpdateIdentifiedUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:UpdateIdentifiedUser"
+    UpdateInternalUser:
+        Value:
+            Ref:
+                UpdateInternalUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:UpdateInternalUser"
+    UpdateOrganization:
+        Value:
+            Ref:
+                UpdateOrganization
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:UpdateOrganization"
+    UpdateUnidentifiedUser:
+        Value:
+            Ref:
+                UpdateUnidentifiedUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:UpdateUnidentifiedUser"
+    GetCountries:
+        Value:
+            Ref:
+                GetCountries
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetCountries"
+    GetGenders:
+        Value:
+            Ref:
+                GetGenders
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetGenders"
+    GetInternalUser:
+        Value:
+            Ref:
+                GetInternalUser
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetInternalUser"
+    GetInternalUsers:
+        Value:
+            Ref:
+                GetInternalUsers
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetInternalUsers"
+    GetRoles:
+        Value:
+            Ref:
+                GetRoles
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetRoles"
+    GetClient:
+        Value:
+            Ref:
+                GetRoles
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:GetClient"

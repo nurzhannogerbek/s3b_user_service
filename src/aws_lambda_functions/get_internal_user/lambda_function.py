@@ -30,7 +30,7 @@ def lambda_handler(event, context):
             sys.exit(1)
 
     # Define the value of the data passed to the function.
-    auth0_user_id = event["arguments"]["input"]["auth0UserId"]
+    auth0_user_id = event["arguments"]["auth0UserId"]
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
@@ -38,8 +38,8 @@ def lambda_handler(event, context):
     # Prepare the SQL request that returns all detailed information about specific internal user.
     statement = """
     select
-        users.auth0_user_id,
-        users.auth0_metadata,
+        internal_users.auth0_user_id,
+        internal_users.auth0_metadata::text,
         users.user_id,
         internal_users.internal_user_first_name as user_first_name,
         internal_users.internal_user_last_name as user_last_name,
@@ -49,7 +49,7 @@ def lambda_handler(event, context):
         internal_users.internal_user_primary_phone_number as user_primary_phone_number,
         internal_users.internal_user_secondary_phone_number as user_secondary_phone_number,
         internal_users.internal_user_profile_photo_url as user_profile_photo_url,
-        
+        internal_users.internal_user_position_name as user_position_name,
         genders.gender_id,
         genders.gender_technical_name,
         genders.gender_public_name,
@@ -64,7 +64,15 @@ def lambda_handler(event, context):
         roles.role_technical_name,
         roles.role_public_name,
         roles.role_description,
-        
+        organizations.organization_id,
+        organizations.organization_name,
+        organizations.organization_description,
+        organizations.parent_organization_id,
+        organizations.parent_organization_name,
+        organizations.parent_organization_description,
+        organizations.root_organization_id,
+        organizations.root_organization_name,
+        organizations.root_organization_description
     from
         users
     left join internal_users on
@@ -78,7 +86,7 @@ def lambda_handler(event, context):
     left join organizations on
         internal_users.organization_id = organizations.organization_id
     where
-        users.auth0_user_id = '{0}'
+        internal_users.auth0_user_id = '{0}'
     and
         users.internal_user_id is not null
     limit 1;
@@ -95,80 +103,35 @@ def lambda_handler(event, context):
     postgresql_connection.commit()
 
     # Fetch the next row of a query result set.
-    user_entry = cursor.fetchone()
-
-    # Prepare the SQL request that returns information about new created internal user.
-    statement = """
-    select
-        organizations.organization_id,
-        organizations.organization_name,
-        organizations.organization_description,
-        organizations.parent_organization_id,
-        organizations.parent_organization_name,
-        organizations.parent_organization_description
-    from
-        internal_users_organizations_relationship
-    left join organizations on
-        internal_users_organizations_relationship.organization_id = organizations.organization_id
-    where
-        internal_users_organizations_relationship.internal_user_id = (
-            select
-                internal_user_id
-            from
-                users
-            where
-                user_id = {0}
-            limit 1
-        );
-    """.format(user_id)
-
-    # Execute a previously prepared SQL query.
-    try:
-        cursor.execute(statement)
-    except Exception as error:
-        logger.error(error)
-        sys.exit(1)
-
-    # After the successful execution of the query commit your changes to the database.
-    postgresql_connection.commit()
-
-    # Fetch the next row of a query result set.
-    organizations_entries = cursor.fetchall()
+    internal_user_entry = cursor.fetchone()
 
     # The cursor will be unusable from this point forward.
     cursor.close()
 
-    # Analyze the data about organizations received from the database.
-    organizations = list()
-    for entry in organizations_entries:
+    # Analyze the data about internal user received from the database.
+    internal_user = dict()
+    if internal_user_entry is not None:
+        gender = dict()
+        country = dict()
+        role = dict()
         organization = dict()
-        for key, value in entry.items():
-            # Convert the UUID data type to the string.
+        for key, value in internal_user_entry.items():
             if "_id" in key and value is not None:
                 value = str(value)
-            organization[utils.camel_case(key)] = value
-        organizations.append(organization)
-
-    # Analyze the data about internal user received from the database.
-    user = dict()
-    gender = dict()
-    country = dict()
-    role = dict()
-    for key, value in user_entry.items():
-        if "_id" in key and value is not None:
-            value = str(value)
-        if "gender_" in key:
-            gender[utils.camel_case(key)] = value
-        elif "country_" in key:
-            country[utils.camel_case(key)] = value
-        elif "role_" in key:
-            role[utils.camel_case(key)] = value
-        else:
-            user[utils.camel_case(key)] = value
-    user["gender"] = gender
-    user["country"] = country
-    user["role"] = role
-    user["organizations"] = organizations
+            if "gender_" in key:
+                gender[utils.camel_case(key)] = value
+            elif "country_" in key:
+                country[utils.camel_case(key)] = value
+            elif "role_" in key:
+                role[utils.camel_case(key)] = value
+            elif "organization_" in key:
+                organization[utils.camel_case(key)] = value
+            else:
+                internal_user[utils.camel_case(key)] = value
+        internal_user["gender"] = gender
+        internal_user["country"] = country
+        internal_user["role"] = role
+        internal_user["organization"] = organization
 
     # Return the full information about the internal user as the response.
-    return user
+    return internal_user

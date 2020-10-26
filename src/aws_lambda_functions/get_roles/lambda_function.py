@@ -32,14 +32,15 @@ def lambda_handler(event, context):
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
 
-    # Prepare the SQL request that returns the list of genders.
+    # Prepare the SQL request that returns the list of roles.
     statement = """
     select
-        gender_id,
-        gender_technical_name,
-        gender_public_name
+        role_id,
+        role_technical_name,
+        role_public_name,
+        role_description
     from
-        genders;
+        roles;
     """
 
     # Execute a previously prepared SQL query.
@@ -53,17 +54,21 @@ def lambda_handler(event, context):
     postgresql_connection.commit()
 
     # Fetch the next row of a query result set.
-    genders_entry = cursor.fetchall()
+    roles_entries = cursor.fetchall()
 
-    # Analyze the data about genders received from the database.
-    genders = list()
-    for entry in genders_entry:
-        gender = dict()
-        for key, value in entry.items():
-            if "_id" in key and value is not None:
-                value = str(value)
-            gender[utils.camel_case(key)] = value
-        genders.append(gender)
+    # The cursor will be unusable from this point forward.
+    cursor.close()
 
-    # Return the list of genders as the response.
-    return genders
+    # Analyze the data about roles received from the database.
+    roles = list()
+    if roles_entries is not None:
+        for entry in roles_entries:
+            role = dict()
+            for key, value in entry.items():
+                if "_id" in key and value is not None:
+                    value = str(value)
+                role[utils.camel_case(key)] = value
+            roles.append(role)
+
+    # Return the list of roles as the response.
+    return roles

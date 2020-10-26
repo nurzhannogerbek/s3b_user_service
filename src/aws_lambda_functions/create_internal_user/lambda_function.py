@@ -91,27 +91,42 @@ def lambda_handler(event, context):
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
 
-    # Prepare the SQL request that updates information of the specific internal user.
+    # Prepare the SQL request that creates the new internal user.
     statement = """
-    update
-        internal_users
-    set
-        internal_user_first_name = {0},
-        internal_user_last_name = {1},
-        internal_user_middle_name = {2},
-        internal_user_primary_email = {3},
-        internal_user_secondary_email = {4},
-        internal_user_primary_phone_number = {5},
-        internal_user_secondary_phone_number = {6},
-        internal_user_profile_photo_url = {7},
-        internal_user_position_name = {8},
-        gender_id = {9},
-        country_id = {10},
-        role_id = {11},
-        organization_id = {12},
-        auth0_metadata = {13}
-    where
-        auth0_user_id = {14};
+    insert into internal_users (
+        internal_user_first_name,
+        internal_user_last_name,
+        internal_user_middle_name,
+        internal_user_primary_email,
+        internal_user_secondary_email,
+        internal_user_primary_phone_number,
+        internal_user_secondary_phone_number,
+        internal_user_profile_photo_url,
+        internal_user_position_name,
+        gender_id,
+        country_id,
+        role_id,
+        organization_id,
+        auth0_user_id,
+        auth0_metadata
+    ) values (
+        {0},
+        {1},
+        {2},
+        {3},
+        {4},
+        {5},
+        {6},
+        {7},
+        {8},
+        {9},
+        {10},
+        {11},
+        {12},
+        {13},
+        {14}
+    ) returning
+        internal_user_id;
     """.format(
         'null' if internal_user_first_name is None or len(internal_user_first_name) == 0
         else "'{0}'".format(internal_user_first_name),
@@ -139,9 +154,9 @@ def lambda_handler(event, context):
         else "'{0}'".format(role_id),
         'null' if organization_id is None or len(organization_id) == 0
         else "'{0}'".format(organization_id),
+        "'{0}'".format(auth0_user_id),
         'null' if auth0_metadata is None or len(auth0_metadata) == 0
         else "'{0}'".format(auth0_metadata.replace("'", "''")),
-        "'{0}'".format(auth0_user_id)
     )
 
     # Execute a previously prepared SQL query.
@@ -153,6 +168,32 @@ def lambda_handler(event, context):
 
     # After the successful execution of the query commit your changes to the database.
     postgresql_connection.commit()
+
+    # Define the id of the new internal user.
+    internal_user_id = cursor.fetchone()["internal_user_id"]
+
+    # Prepare the SQL request that creates the new user.
+    statement = """
+    insert into users (
+        internal_user_id
+    ) values (
+        {0}
+    ) returning
+        user_id;
+    """.format("'{0}'".format(internal_user_id))
+
+    # Execute a previously prepared SQL query.
+    try:
+        cursor.execute(statement)
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # After the successful execution of the query commit your changes to the database.
+    postgresql_connection.commit()
+
+    # Define the id of the new user.
+    user_id = str(cursor.fetchone()["user_id"])
 
     # Prepare the SQL request that returns all detailed information of the specific internal user.
     statement = """
@@ -205,11 +246,11 @@ def lambda_handler(event, context):
     left join organizations on
         internal_users.organization_id = organizations.organization_id
     where
-        internal_users.auth0_user_id = '{0}'
+        users.user_id = '{0}'
     and
         users.internal_user_id is not null
     limit 1;
-    """.format(auth0_user_id)
+    """.format(user_id)
 
     # Execute a previously prepared SQL query.
     try:

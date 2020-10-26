@@ -20,7 +20,7 @@ def lambda_handler(event, context):
     :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
     :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
     """
-    # Since the connection with the database were defined outside of the function, we create global variables.
+    # Since the connection with the database were defined outside of the function, we create global variable.
     global postgresql_connection
     if not postgresql_connection:
         try:
@@ -32,18 +32,14 @@ def lambda_handler(event, context):
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
 
-    # Prepare the SQL request that returns the list of countries.
+    # Prepare the SQL request that returns the list of genders.
     statement = """
     select
-        country_id,
-        country_short_name,
-        country_official_name,
-        country_alpha_2_code,
-        country_alpha_3_code,
-        country_numeric_code,
-        country_code_top_level_domain
+        gender_id,
+        gender_technical_name,
+        gender_public_name
     from
-        countries;
+        genders;
     """
 
     # Execute a previously prepared SQL query.
@@ -57,17 +53,21 @@ def lambda_handler(event, context):
     postgresql_connection.commit()
 
     # Fetch the next row of a query result set.
-    countries_entry = cursor.fetchall()
+    genders_entries = cursor.fetchall()
 
-    # Analyze the data about countries received from the database.
-    countries = list()
-    for entry in countries_entry:
-        country = dict()
-        for key, value in entry.items():
-            if "_id" in key and value is not None:
-                value = str(value)
-            country[utils.camel_case(key)] = value
-        countries.append(country)
+    # The cursor will be unusable from this point forward.
+    cursor.close()
 
-    # Return the list of countries as the response.
-    return countries
+    # Analyze the data about genders received from the database.
+    genders = list()
+    if genders_entries is not None:
+        for entry in genders_entries:
+            gender = dict()
+            for key, value in entry.items():
+                if "_id" in key and value is not None:
+                    value = str(value)
+                gender[utils.camel_case(key)] = value
+            genders.append(gender)
+
+    # Return the list of genders as the response.
+    return genders
