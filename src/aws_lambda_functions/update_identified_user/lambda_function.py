@@ -84,14 +84,14 @@ def lambda_handler(event, context):
         identified_user_first_name = {0},
         identified_user_last_name = {1},
         identified_user_middle_name = {2},
-        identified_user_primary_email = {4},
-        identified_user_secondary_email = {5},
-        identified_user_primary_phone_number = {6},
-        identified_user_secondary_phone_number = {7},
-        identified_user_profile_photo_url = {8},
-        gender_id = {9},
-        country_id = {10},
-        metadata = {11}
+        identified_user_primary_email = {3},
+        identified_user_secondary_email = {4},
+        identified_user_primary_phone_number = {5},
+        identified_user_secondary_phone_number = {6},
+        identified_user_profile_photo_url = {7},
+        gender_id = {8},
+        country_id = {9},
+        metadata = {10}
     where
         identified_user_id = (
             select
@@ -99,7 +99,7 @@ def lambda_handler(event, context):
             from
                 users
             where
-                user_id = {12}
+                user_id = {11}
             and
                 identified_user_id is not null
             limit 1
