@@ -19,6 +19,7 @@ Globals:
 Parameters:
     EnvironmentName:
         Type: String
+        Default: Test
     BackendDependenciesStackName:
         Type: String
         Default: 3beepBackendDependencies
