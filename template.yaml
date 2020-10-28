@@ -4,12 +4,34 @@ Globals:
     Function:
         MemorySize: 3008
         Timeout: 900
+        Environment:
+            Variables:
+                POSTGRESQL_USERNAME:
+                    Fn::Sub: "${PostgreSQLUsername}"
+                POSTGRESQL_PASSWORD:
+                    Fn::Sub: "${PostgreSQLPassword}"
+                POSTGRESQL_HOST:
+                    Fn::Sub: "${PostgreSQLHost}"
+                POSTGRESQL_PORT:
+                    Fn::Sub: "${PostgreSQLPort}"
+                POSTGRESQL_DB_NAME:
+                    Fn::Sub: "${PostgreSQLDBName}"
 Parameters:
     EnvironmentName:
         Type: String
     BackendDependenciesStackName:
         Type: String
         Default: 3beepBackendDependencies
+    PostgreSQLUsername:
+        Type: String
+    PostgreSQLPassword:
+        Type: String
+    PostgreSQLHost:
+        Type: String
+    PostgreSQLPort:
+        Type: String
+    PostgreSQLDBName:
+        Type: String
 Resources:
     CreateIdentifiedUser:
         Type: AWS::Serverless::Function
