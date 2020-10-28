@@ -9,7 +9,7 @@ Parameters:
         Type: String
     BackendDependenciesStackName:
         Type: String
-        Default: BackendDependencies
+        Default: 3beepBackendDependencies
 Resources:
     CreateIdentifiedUser:
         Type: AWS::Serverless::Function
