@@ -43,9 +43,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     CreateInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -56,9 +56,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     CreateOrganization:
         Type: AWS::Serverless::Function
         Properties:
@@ -69,9 +69,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     CreateUnidentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -82,9 +82,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     UpdateIdentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -95,9 +95,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     UpdateInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -108,9 +108,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     UpdateOrganization:
         Type: AWS::Serverless::Function
         Properties:
@@ -121,9 +121,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     UpdateUnidentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -134,9 +134,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetCountries:
         Type: AWS::Serverless::Function
         Properties:
@@ -147,9 +147,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetGenders:
         Type: AWS::Serverless::Function
         Properties:
@@ -160,9 +160,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -173,9 +173,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetInternalUsers:
         Type: AWS::Serverless::Function
         Properties:
@@ -186,9 +186,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetRoles:
         Type: AWS::Serverless::Function
         Properties:
@@ -199,9 +199,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
     GetClient:
         Type: AWS::Serverless::Function
         Properties:
@@ -212,9 +212,9 @@ Resources:
             Runtime: python3.8
             Layers:
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Databases"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
-                    Fn::Sub: "${BackendDependenciesStackName}:Utils"
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
 Outputs:
     CreateIdentifiedUser:
         Value:
