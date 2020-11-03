@@ -297,7 +297,7 @@ Outputs:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetRolesARN"
     GetClientARN:
         Value:
-            Fn::GetAtt: GetRoles.Arn
+            Fn::GetAtt: GetClient.Arn
         Export:
             Name:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientARN"
