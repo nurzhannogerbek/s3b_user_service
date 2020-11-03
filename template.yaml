@@ -217,101 +217,87 @@ Resources:
                 - Fn::ImportValue:
                     Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
 Outputs:
-    CreateIdentifiedUser:
+    CreateIdentifiedUserARN:
         Value:
-            Ref:
-                CreateIdentifiedUser
+            Fn::GetAtt: CreateIdentifiedUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateIdentifiedUser"
-    CreateInternalUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateIdentifiedUserARN"
+    CreateInternalUserARN:
         Value:
-            Ref:
-                CreateInternalUser
+            Fn::GetAtt: CreateInternalUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateInternalUser"
-    CreateOrganization:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateInternalUserARN"
+    CreateOrganizationARN:
         Value:
-            Ref:
-                CreateOrganization
+            Fn::GetAtt: CreateOrganization.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateOrganization"
-    CreateUnidentifiedUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateOrganizationARN"
+    CreateUnidentifiedUserARN:
         Value:
-            Ref:
-                CreateUnidentifiedUser
+            Fn::GetAtt: CreateUnidentifiedUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateUnidentifiedUser"
-    UpdateIdentifiedUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateUnidentifiedUserARN"
+    UpdateIdentifiedUserARN:
         Value:
-            Ref:
-                UpdateIdentifiedUser
+            Fn::GetAtt: UpdateIdentifiedUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateIdentifiedUser"
-    UpdateInternalUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateIdentifiedUserARN"
+    UpdateInternalUserARN:
         Value:
-            Ref:
-                UpdateInternalUser
+            Fn::GetAtt: UpdateInternalUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateInternalUser"
-    UpdateOrganization:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateInternalUserARN"
+    UpdateOrganizationARN:
         Value:
-            Ref:
-                UpdateOrganization
+            Fn::GetAtt: UpdateOrganization.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateOrganization"
-    UpdateUnidentifiedUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateOrganizationARN"
+    UpdateUnidentifiedUserARN:
         Value:
-            Ref:
-                UpdateUnidentifiedUser
+            Fn::GetAtt: UpdateUnidentifiedUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateUnidentifiedUser"
-    GetCountries:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateUnidentifiedUserARN"
+    GetCountriesARN:
         Value:
-            Ref:
-                GetCountries
+            Fn::GetAtt: GetCountries.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetCountries"
-    GetGenders:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetCountriesARN"
+    GetGendersARN:
         Value:
-            Ref:
-                GetGenders
+            Fn::GetAtt: GetGenders.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetGenders"
-    GetInternalUser:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetGendersARN"
+    GetInternalUserARN:
         Value:
-            Ref:
-                GetInternalUser
+            Fn::GetAtt: GetInternalUser.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUser"
-    GetInternalUsers:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUserARN"
+    GetInternalUsersARN:
         Value:
-            Ref:
-                GetInternalUsers
+            Fn::GetAtt: GetInternalUsers.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUsers"
-    GetRoles:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUsersARN"
+    GetRolesARN:
         Value:
-            Ref:
-                GetRoles
+            Fn::GetAtt: GetRoles.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetRoles"
-    GetClient:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetRolesARN"
+    GetClientARN:
         Value:
-            Ref:
-                GetRoles
+            Fn::GetAtt: GetRoles.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClient"
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientARN"
