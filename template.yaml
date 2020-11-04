@@ -216,6 +216,19 @@ Resources:
                     Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
                 - Fn::ImportValue:
                     Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+    GetClients:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName:
+                Fn::Sub: "${EnvironmentName}GetClients"
+            CodeUri: src/aws_lambda_functions/get_clients
+            Handler: lambda_function.lambda_handler
+            Runtime: python3.8
+            Layers:
+                - Fn::ImportValue:
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
+                - Fn::ImportValue:
+                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
 Outputs:
     CreateIdentifiedUserARN:
         Value:
@@ -301,3 +314,9 @@ Outputs:
         Export:
             Name:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientARN"
+    GetClientsARN:
+        Value:
+            Fn::GetAtt: GetClients.Arn
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientsARN"
