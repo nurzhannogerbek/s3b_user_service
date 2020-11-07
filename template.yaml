@@ -1,7 +1,25 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
+Parameters:
+    PostgreSQLUsername:
+        Type: String
+    PostgreSQLPassword:
+        Type: String
+    PostgreSQLHost:
+        Type: String
+    PostgreSQLPort:
+        Type: String
+    PostgreSQLDBName:
+        Type: String
+    EnvironmentName:
+        Type: String
+    DatabasesLayerARN:
+        Type: String
+    UtilsLayerARN:
+        Type: String
 Globals:
     Function:
+        Runtime: python3.8
         MemorySize: 3008
         Timeout: 900
         Environment:
@@ -16,23 +34,6 @@ Globals:
                     Fn::Sub: "${PostgreSQLPort}"
                 POSTGRESQL_DB_NAME:
                     Fn::Sub: "${PostgreSQLDBName}"
-Parameters:
-    EnvironmentName:
-        Type: String
-        Default: Test
-    BackendDependenciesStackName:
-        Type: String
-        Default: 3beepBackendDependencies
-    PostgreSQLUsername:
-        Type: String
-    PostgreSQLPassword:
-        Type: String
-    PostgreSQLHost:
-        Type: String
-    PostgreSQLPort:
-        Type: String
-    PostgreSQLDBName:
-        Type: String
 Resources:
     CreateIdentifiedUser:
         Type: AWS::Serverless::Function
@@ -41,12 +42,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}CreateIdentifiedUser"
             CodeUri: src/aws_lambda_functions/create_identified_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     CreateInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -54,12 +52,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}CreateInternalUser"
             CodeUri: src/aws_lambda_functions/create_internal_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     CreateOrganization:
         Type: AWS::Serverless::Function
         Properties:
@@ -67,12 +62,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}CreateOrganization"
             CodeUri: src/aws_lambda_functions/create_organization
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     CreateUnidentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -80,12 +72,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}CreateUnidentifiedUser"
             CodeUri: src/aws_lambda_functions/create_unidentified_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     UpdateIdentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -93,12 +82,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}UpdateIdentifiedUser"
             CodeUri: src/aws_lambda_functions/update_identified_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     UpdateInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -106,12 +92,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}UpdateInternalUser"
             CodeUri: src/aws_lambda_functions/update_internal_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     UpdateOrganization:
         Type: AWS::Serverless::Function
         Properties:
@@ -119,12 +102,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}UpdateOrganization"
             CodeUri: src/aws_lambda_functions/update_organization
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     UpdateUnidentifiedUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -132,12 +112,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}UpdateUnidentifiedUser"
             CodeUri: src/aws_lambda_functions/update_unidentified_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetCountries:
         Type: AWS::Serverless::Function
         Properties:
@@ -145,12 +122,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetCountries"
             CodeUri: src/aws_lambda_functions/get_countries
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetGenders:
         Type: AWS::Serverless::Function
         Properties:
@@ -158,12 +132,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetGenders"
             CodeUri: src/aws_lambda_functions/get_genders
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -171,12 +142,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetInternalUser"
             CodeUri: src/aws_lambda_functions/get_internal_user
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetInternalUsers:
         Type: AWS::Serverless::Function
         Properties:
@@ -184,12 +152,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetInternalUsers"
             CodeUri: src/aws_lambda_functions/get_internal_users
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetRoles:
         Type: AWS::Serverless::Function
         Properties:
@@ -197,12 +162,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetRoles"
             CodeUri: src/aws_lambda_functions/get_roles
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetClient:
         Type: AWS::Serverless::Function
         Properties:
@@ -210,12 +172,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetClient"
             CodeUri: src/aws_lambda_functions/get_client
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
     GetClients:
         Type: AWS::Serverless::Function
         Properties:
@@ -223,12 +182,9 @@ Resources:
                 Fn::Sub: "${EnvironmentName}GetClients"
             CodeUri: src/aws_lambda_functions/get_clients
             Handler: lambda_function.lambda_handler
-            Runtime: python3.8
             Layers:
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Databases"
-                - Fn::ImportValue:
-                    Fn::Sub: "${EnvironmentName}${BackendDependenciesStackName}:${EnvironmentName}Utils"
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
 Outputs:
     CreateIdentifiedUserARN:
         Value:
