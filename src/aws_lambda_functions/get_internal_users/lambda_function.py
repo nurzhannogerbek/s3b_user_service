@@ -55,6 +55,7 @@ def lambda_handler(event, context):
     # Prepare the SQL request that returns all detailed information about internal users.
     statement = """
     select
+        count(*) over() as total_number_of_users,
         internal_users.auth0_user_id,
         internal_users.auth0_metadata::text,
         users.user_id,
@@ -131,8 +132,9 @@ def lambda_handler(event, context):
 
     # Analyze the data about internal users received from the database.
     internal_users = list()
+    total_number_of_users = 0
     if internal_users_entries is not None:
-        for entry in internal_users_entries:
+        for index, entry in enumerate(internal_users_entries):
             internal_user = dict()
             gender = dict()
             country = dict()
@@ -156,6 +158,12 @@ def lambda_handler(event, context):
             internal_user["role"] = role
             internal_user["organization"] = organization
             internal_users.append(internal_user)
+            if index == 0:
+                total_number_of_users = entry["total_number_of_users"]
 
     # Return the list of internal users as the response.
-    return internal_users
+    response = {
+        "totalNumberOfUsers": total_number_of_users,
+        "internalUsers": internal_users
+    }
+    return response

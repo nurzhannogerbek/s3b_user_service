@@ -56,6 +56,7 @@ def lambda_handler(event, context):
     # Prepare the SQL request that returns the information of the specific client.
     statement = """
     select
+        count(*) over() as total_number_of_users,
         distinct users.user_id,
         case
             when users.identified_user_id is not null
@@ -180,8 +181,9 @@ def lambda_handler(event, context):
 
     # Analyze the data about clients received from the database.
     clients = list()
+    total_number_of_users = 0
     if clients_entries is not None:
-        for entry in clients_entries:
+        for index, entry in enumerate(clients_entries):
             client = dict()
             gender = dict()
             country = dict()
@@ -197,6 +199,12 @@ def lambda_handler(event, context):
             client["gender"] = gender
             client["country"] = country
             clients.append(client)
+            if index == 0:
+                total_number_of_users = entry["total_number_of_users"]
 
     # Return the full information about the clients as the response.
-    return clients
+    response = {
+        "totalNumberOfUsers": total_number_of_users,
+        "clients": clients
+    }
+    return response
