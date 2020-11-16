@@ -57,7 +57,7 @@ def lambda_handler(event, context):
     statement = """
     select
         count(*) over() as total_number_of_users,
-        distinct users.user_id,
+        users.user_id,
         case
             when users.identified_user_id is not null
             and users.unidentified_user_id is null then identified_users.identified_user_first_name
