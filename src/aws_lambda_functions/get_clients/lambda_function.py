@@ -61,6 +61,7 @@ def lambda_handler(event, context):
     from (
         select
             distinct users.user_id,
+            users.entry_created_date_time as created_date_time,
             case
                 when users.identified_user_id is not null
                 and users.unidentified_user_id is null then identified_users.identified_user_first_name
@@ -111,6 +112,21 @@ def lambda_handler(event, context):
                 and users.unidentified_user_id is null then identified_users.metadata::text
                 else unidentified_users.metadata::text
             end as metadata,
+            case
+                when users.identified_user_id is not null
+                and users.unidentified_user_id is null then identified_users.telegram_username
+                else null
+            end as telegram_username,
+            case
+                when users.identified_user_id is not null
+                and users.unidentified_user_id is null then identified_users.whatsapp_profile
+                else null
+            end as whatsapp_profile,
+            case
+                when users.identified_user_id is not null
+                and users.unidentified_user_id is null then identified_users.whatsapp_username
+                else null
+            end as whatsapp_username,
             genders.gender_id,
             genders.gender_technical_name,
             genders.gender_public_name,
@@ -191,7 +207,7 @@ def lambda_handler(event, context):
             gender = dict()
             country = dict()
             for key, value in entry.items():
-                if "_id" in key and value is not None:
+                if ("_id" in key or "_date_time" in key) and value is not None:
                     value = str(value)
                 if "gender_" in key:
                     gender[utils.camel_case(key)] = value
