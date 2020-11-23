@@ -223,7 +223,10 @@ def lambda_handler(event, context):
         countries.country_alpha_3_code,
         countries.country_numeric_code,
         countries.country_code_top_level_domain,
-        identified_users.metadata::text
+        identified_users.metadata::text,
+        identified_users.telegram_username,
+        identified_users.whatsapp_profile,
+        identified_users.whatsapp_username
     from
         users
     left join identified_users on

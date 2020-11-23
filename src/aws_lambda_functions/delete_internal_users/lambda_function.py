@@ -54,8 +54,7 @@ def lambda_handler(event, context):
     # Prepare the SQL request that get an aggregated list of IDs by user type.
     statement = """
     select
-        array_remove(array_agg(distinct identified_user_id), null) as identified_users_ids,
-        array_remove(array_agg(distinct unidentified_user_id), null) as unidentified_users_ids
+        array_remove(array_agg(distinct internal_user_id), null) as internal_users_ids
     from
         users
     where user_id in ({0});
@@ -72,46 +71,21 @@ def lambda_handler(event, context):
     postgresql_connection.commit()
 
     # Define the ids.
-    identified_users_ids = cursor.fetchone()["identified_users_ids"]
-    unidentified_users_ids = cursor.fetchone()["unidentified_users_ids"]
+    internal_users_ids = cursor.fetchone()["internal_users_ids"]
 
-    if identified_users_ids is not None:
-        # Convert string array with identified users' ids to the string data type.
-        converted_identified_users_ids = ", ".join("'{0}'".format(user_id) for user_id in identified_users_ids)
+    if internal_users_ids is not None:
+        # Convert string array with internal users' ids to the string data type.
+        converted_internal_users_ids = ", ".join("'{0}'".format(user_id) for user_id in internal_users_ids)
 
         # Put a tag for deletion for an identified user.
         statement = """
         update
-            identified_users
+            internal_users
         set
             entry_deleted_date_time = now()
         where
-            identified_user_id in ({0});
-        """.format(converted_identified_users_ids)
-
-        # Execute a previously prepared SQL query.
-        try:
-            cursor.execute(statement)
-        except Exception as error:
-            logger.error(error)
-            sys.exit(1)
-
-        # After the successful execution of the query commit your changes to the database.
-        postgresql_connection.commit()
-
-    if unidentified_users_ids is not None:
-        # Convert string array with unidentified users' ids to the string data type.
-        converted_unidentified_users_ids = ", ".join("'{0}'".format(user_id) for user_id in unidentified_users_ids)
-
-        # Put a tag for deletion for an unidentified user.
-        statement = """
-        update
-            unidentified_users
-        set
-            entry_deleted_date_time = now()
-        where
-            unidentified_user_id in ({0});
-        """.format(converted_unidentified_users_ids)
+            internal_user_id in ({0});
+        """.format(converted_internal_users_ids)
 
         # Execute a previously prepared SQL query.
         try:

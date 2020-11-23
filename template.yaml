@@ -204,6 +204,15 @@ Resources:
             Handler: lambda_function.lambda_handler
             Layers:
                 - Fn::Sub: "${DatabasesLayerARN}"
+    DeleteInternalUsers:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName:
+                Fn::Sub: "${EnvironmentName}DeleteInternalUsers"
+            CodeUri: src/aws_lambda_functions/delete_internal_users
+            Handler: lambda_function.lambda_handler
+            Layers:
+                - Fn::Sub: "${DatabasesLayerARN}"
 Outputs:
     CreateIdentifiedUserARN:
         Value:
@@ -307,3 +316,9 @@ Outputs:
         Export:
             Name:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteClients"
+    DeleteInternalUsersARN:
+        Value:
+            Fn::GetAtt: DeleteInternalUsers.Arn
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteInternalUsers"

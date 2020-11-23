@@ -86,6 +86,18 @@ def lambda_handler(event, context):
     except KeyError:
         country_id = None
     metadata = event["arguments"]["input"]["metadata"]
+    try:
+        telegram_username = event["arguments"]["input"]["telegramUsername"]
+    except KeyError:
+        telegram_username = None
+    try:
+        whatsapp_profile = event["arguments"]["input"]["whatsappProfile"]
+    except KeyError:
+        whatsapp_profile = None
+    try:
+        whatsapp_username = event["arguments"]["input"]["whatsappUsername"]
+    except KeyError:
+        whatsapp_username = None
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
@@ -105,7 +117,10 @@ def lambda_handler(event, context):
         identified_user_profile_photo_url = {7},
         gender_id = {8},
         country_id = {9},
-        metadata = {10}
+        metadata = {10},
+        telegram_username = {11},
+        whatsapp_profile = {12},
+        whatsapp_username = {13}
     where
         identified_user_id = (
             select
@@ -113,7 +128,7 @@ def lambda_handler(event, context):
             from
                 users
             where
-                user_id = {11}
+                user_id = {14}
             and
                 identified_user_id is not null
             limit 1
@@ -140,6 +155,12 @@ def lambda_handler(event, context):
         'null' if country_id is None or len(country_id) == 0
         else "'{0}'".format(country_id),
         "'{0}'".format(metadata.replace("'", "''")),
+        'null' if telegram_username is None or len(telegram_username) == 0
+        else "'{0}'".format(telegram_username),
+        'null' if whatsapp_profile is None or len(whatsapp_profile) == 0
+        else "'{0}'".format(whatsapp_profile),
+        'null' if whatsapp_username is None or len(whatsapp_username) == 0
+        else "'{0}'".format(whatsapp_username),
         "'{0}'".format(user_id)
     )
 
@@ -175,7 +196,10 @@ def lambda_handler(event, context):
         countries.country_alpha_3_code,
         countries.country_numeric_code,
         countries.country_code_top_level_domain,
-        identified_users.metadata::text
+        identified_users.metadata::text,
+        identified_users.telegram_username,
+        identified_users.whatsapp_profile,
+        identified_users.whatsapp_username
     from
         users
     left join identified_users on
