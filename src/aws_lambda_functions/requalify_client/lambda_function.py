@@ -28,22 +28,8 @@ def lambda_handler(event, context):
     :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
     :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
     """
-    # Since the connection with the database were defined outside of the function, we create global variables.
-    global postgresql_connection
-    if not postgresql_connection:
-        try:
-            postgresql_connection = databases.create_postgresql_connection(
-                POSTGRESQL_USERNAME,
-                POSTGRESQL_PASSWORD,
-                POSTGRESQL_HOST,
-                POSTGRESQL_PORT,
-                POSTGRESQL_DB_NAME
-            )
-        except Exception as error:
-            logger.error(error)
-            sys.exit(1)
-
     # Define the values of the data passed to the function.
+    user_id = event["arguments"]["input"]["userId"]
     try:
         identified_user_first_name = event["arguments"]["input"]["userFirstName"]
     except KeyError:
@@ -97,6 +83,21 @@ def lambda_handler(event, context):
         whatsapp_username = event["arguments"]["input"]["whatsappUsername"]
     except KeyError:
         whatsapp_username = None
+
+    # Since the connection with the database were defined outside of the function, we create the global variable.
+    global postgresql_connection
+    if not postgresql_connection:
+        try:
+            postgresql_connection = databases.create_postgresql_connection(
+                POSTGRESQL_USERNAME,
+                POSTGRESQL_PASSWORD,
+                POSTGRESQL_HOST,
+                POSTGRESQL_PORT,
+                POSTGRESQL_DB_NAME
+            )
+        except Exception as error:
+            logger.error(error)
+            sys.exit(1)
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
@@ -178,15 +179,30 @@ def lambda_handler(event, context):
     # Define the id of the new identified user.
     identified_user_id = cursor.fetchone()["identified_user_id"]
 
-    # Prepare the SQL request that creates the new user.
+    # Update the user type.
     statement = """
-    insert into users (
-        identified_user_id
-    ) values (
-        {0}
-    ) returning
-        user_id;
-    """.format("'{0}'".format(identified_user_id))
+    update
+        users x
+    set
+        identified_user_id = '{0}',
+        unidentified_user_id = null
+    from (
+        select
+            *
+        from
+            users
+        where
+            user_id = '{1}'
+        for update
+    ) y
+    where
+        x.user_id = y.user_id
+    returning
+        y.unidentified_user_id;
+    """.format(
+        identified_user_id,
+        user_id
+    )
 
     # Execute a previously prepared SQL query.
     try:
@@ -198,21 +214,99 @@ def lambda_handler(event, context):
     # After the successful execution of the query commit your changes to the database.
     postgresql_connection.commit()
 
-    # Define the id of the new user.
-    user_id = cursor.fetchone()["user_id"]
+    # Define the id of the new identified user.
+    unidentified_user_id = cursor.fetchone()["unidentified_user_id"]
 
-    # Prepare the SQL request that returns information of the new created user.
+    # Put a tag for deletion for an unidentified user.
+    statement = """
+    update
+        unidentified_users
+    set
+        entry_deleted_date_time = now()
+    where
+        unidentified_user_id = '{0}';
+    """.format(unidentified_user_id)
+
+    # Execute a previously prepared SQL query.
+    try:
+        cursor.execute(statement)
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # After the successful execution of the query commit your changes to the database.
+    postgresql_connection.commit()
+
+    # Prepare the SQL request that returns the information of the specific client.
     statement = """
     select
         users.user_id,
-        identified_users.identified_user_first_name as user_first_name,
-        identified_users.identified_user_last_name as user_last_name,
-        identified_users.identified_user_middle_name as user_middle_name,
-        identified_users.identified_user_primary_email as user_primary_email,
-        identified_users.identified_user_secondary_email as user_secondary_email,
-        identified_users.identified_user_primary_phone_number as user_primary_phone_number,
-        identified_users.identified_user_secondary_phone_number as user_secondary_phone_number,
-        identified_users.identified_user_profile_photo_url as user_profile_photo_url,
+        users.entry_created_date_time as created_date_time,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_first_name
+            else null
+        end as user_first_name,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_last_name
+            else null
+        end as user_last_name,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_middle_name
+            else null
+        end as user_middle_name,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_primary_email
+            else null
+        end as user_primary_email,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_secondary_email
+            else null
+        end as user_secondary_email,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_primary_phone_number
+            else null
+        end as user_primary_phone_number,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_secondary_phone_number
+            else null
+        end as user_secondary_phone_number,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.identified_user_profile_photo_url
+            else null
+        end as user_profile_photo_url,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then 'identified_user'
+            else 'unidentified_user'
+        end as user_type,
+        case
+            when users.identified_user_id is not null and users.unidentified_user_id is null
+            then identified_users.metadata::text
+            else unidentified_users.metadata::text
+        end as metadata,
+        case
+            when users.identified_user_id is not null
+            and users.unidentified_user_id is null then identified_users.telegram_username
+            else null
+        end as telegram_username,
+        case
+            when users.identified_user_id is not null
+            and users.unidentified_user_id is null then identified_users.whatsapp_profile
+            else null
+        end as whatsapp_profile,
+        case
+            when users.identified_user_id is not null
+            and users.unidentified_user_id is null then identified_users.whatsapp_username
+            else null
+        end as whatsapp_username,
         genders.gender_id,
         genders.gender_technical_name,
         genders.gender_public_name,
@@ -222,12 +316,13 @@ def lambda_handler(event, context):
         countries.country_alpha_2_code,
         countries.country_alpha_3_code,
         countries.country_numeric_code,
-        countries.country_code_top_level_domain,
-        identified_users.metadata::text
+        countries.country_code_top_level_domain
     from
         users
     left join identified_users on
         users.identified_user_id = identified_users.identified_user_id
+    left join unidentified_users on
+        users.unidentified_user_id = unidentified_users.unidentified_user_id
     left join genders on
         identified_users.gender_id = genders.gender_id
     left join countries on
@@ -244,28 +339,31 @@ def lambda_handler(event, context):
         logger.error(error)
         sys.exit(1)
 
+    # After the successful execution of the query commit your changes to the database.
+    postgresql_connection.commit()
+
     # Fetch the next row of a query result set.
-    identified_user_entry = cursor.fetchone()
+    client_entry = cursor.fetchone()
 
     # The cursor will be unusable from this point forward.
     cursor.close()
 
-    # Analyze the data about identified user received from the database.
-    identified_user = dict()
-    if identified_user_entry is not None:
+    # Analyze the data about client received from the database.
+    client = dict()
+    if client_entry is not None:
         gender = dict()
         country = dict()
-        for key, value in identified_user_entry.items():
-            if "_id" in key and value is not None:
+        for key, value in client_entry.items():
+            if ("_id" in key or "_date_time" in key) and value is not None:
                 value = str(value)
             if "gender_" in key:
                 gender[utils.camel_case(key)] = value
             elif "country_" in key:
                 country[utils.camel_case(key)] = value
             else:
-                identified_user[utils.camel_case(key)] = value
-        identified_user["gender"] = gender
-        identified_user["country"] = country
+                client[utils.camel_case(key)] = value
+        client["gender"] = gender
+        client["country"] = country
 
-    # Return the full information of the new created user as the response.
-    return identified_user
+    # Return the list of roles as the response.
+    return client

@@ -150,6 +150,8 @@ def lambda_handler(event, context):
         left join countries on
             identified_users.country_id = countries.country_id
         where
+            users.entry_deleted_date_time is not null
+        and
             users.internal_user_id is null
         and 
             (users.unidentified_user_id is not null or users.identified_user_id is not null)
