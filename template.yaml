@@ -309,16 +309,16 @@ Outputs:
             Fn::GetAtt: RequalifyClient.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}RequalifyClient"
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}RequalifyClientARN"
     DeleteClientsARN:
         Value:
             Fn::GetAtt: DeleteClients.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteClients"
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteClientsARN"
     DeleteInternalUsersARN:
         Value:
             Fn::GetAtt: DeleteInternalUsers.Arn
         Export:
             Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteInternalUsers"
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteInternalUsersARN"
