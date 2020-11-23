@@ -106,7 +106,7 @@ def lambda_handler(event, context):
     where
         users.internal_user_id is not null
     and
-        users.entry_deleted_date_time is not null
+        users.entry_deleted_date_time is null
     and
         organizations.root_organization_id = '{0}'
     offset {1} limit {2};
