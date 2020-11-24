@@ -12,11 +12,15 @@ deploy: &deploy
             export POSTGRESQL_HOST=$DEV_POSTGRESQL_HOST
             export POSTGRESQL_PORT=$DEV_POSTGRESQL_PORT
             export POSTGRESQL_DB_NAME=$DEV_POSTGRESQL_DB_NAME
+            export AUTH0_DOMAIN=$DEV_AUTH0_DOMAIN
+            export AUTH0_CLIENT_ID=$DEV_AUTH0_CLIENT_ID
+            export AUTH0_CLIENT_SECRET=$DEV_AUTH0_CLIENT_SECRET
             export S3_BUCKET="dev-3beep-user-service"
             export STACK_NAME="Dev3beepUserService"
             export ENVIRONMENT_NAME="Dev"
             export DATABASES_LAYER_NAME="DevDatabases"
             export UTILS_LAYER_NAME="DevUtils"
+            export REQUESTS_LAYER_NAME="DevRequests"
           fi
         - >
           if [ $BITBUCKET_BRANCH == "master" ];
@@ -26,11 +30,15 @@ deploy: &deploy
             export POSTGRESQL_HOST=$PROD_POSTGRESQL_HOST
             export POSTGRESQL_PORT=$PROD_POSTGRESQL_PORT
             export POSTGRESQL_DB_NAME=$PROD_POSTGRESQL_DB_NAME
+            export AUTH0_DOMAIN=$PROD_AUTH0_DOMAIN
+            export AUTH0_CLIENT_ID=$PROD_AUTH0_CLIENT_ID
+            export AUTH0_CLIENT_SECRET=$PROD_AUTH0_CLIENT_SECRET
             export S3_BUCKET="prod-3beep-user-service"
             export STACK_NAME="Prod3beepUserService"
             export ENVIRONMENT_NAME="Prod"
             export DATABASES_LAYER_NAME="ProdDatabases"
             export UTILS_LAYER_NAME="ProdUtils"
+            export REQUESTS_LAYER_NAME="ProdRequests"
           fi
         - apt-get update && apt-get install -y python3-pip
         - pip3 install -U awscli
@@ -39,6 +47,7 @@ deploy: &deploy
         - aws configure set aws_secret_access_key $AWS_SECRET_ACCESS_KEY
         - export DATABASES_LAYER_ARN=$(aws lambda list-layer-versions --layer-name $DATABASES_LAYER_NAME --query 'max_by(LayerVersions, &Version).LayerVersionArn'  --output text)
         - export UTILS_LAYER_ARN=$(aws lambda list-layer-versions --layer-name $UTILS_LAYER_NAME --query 'max_by(LayerVersions, &Version).LayerVersionArn'  --output text)
+        - export REQUESTS_LAYER_ARN=$(aws lambda list-layer-versions --layer-name $REQUESTS_LAYER_NAME --query 'max_by(LayerVersions, &Version).LayerVersionArn'  --output text)
         - pipe: atlassian/aws-sam-deploy:0.5.2
           variables:
             AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
@@ -71,6 +80,18 @@ deploy: &deploy
                   "ParameterValue": ${POSTGRESQL_DB_NAME}
                 },
                 {
+                  "ParameterKey": "Auth0Domain",
+                  "ParameterValue": ${AUTH0_DOMAIN}
+                },
+                {
+                  "ParameterKey": "Auth0ClientId",
+                  "ParameterValue": ${AUTH0_CLIENT_ID}
+                },
+                {
+                  "ParameterKey": "Auth0ClientSecret",
+                  "ParameterValue": ${AUTH0_CLIENT_SECRET}
+                },
+                {
                   "ParameterKey": "EnvironmentName",
                   "ParameterValue": ${ENVIRONMENT_NAME}
                 },
@@ -81,6 +102,10 @@ deploy: &deploy
                 {
                   "ParameterKey": "UtilsLayerARN",
                   "ParameterValue": ${UTILS_LAYER_ARN}
+                },
+                {
+                  "ParameterKey": "RequestsLayerARN",
+                  "ParameterValue": ${REQUESTS_LAYER_ARN}
                 }
               ]
             WAIT: 'true'

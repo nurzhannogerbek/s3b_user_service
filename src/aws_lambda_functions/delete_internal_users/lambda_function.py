@@ -71,7 +71,11 @@ def lambda_handler(event, context):
     postgresql_connection.commit()
 
     # Define the ids.
-    internal_users_ids = cursor.fetchone()["internal_users_ids"]
+    aggregated_data = cursor.fetchone()
+    try:
+        internal_users_ids = aggregated_data["internal_users_ids"]
+    except KeyError:
+        internal_users_ids = None
 
     if internal_users_ids is not None:
         # Convert string array with internal users' ids to the string data type.

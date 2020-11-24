@@ -1,5 +1,6 @@
 import databases
 import utils
+import requests
 import logging
 import sys
 import os
@@ -18,6 +19,9 @@ POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 POSTGRESQL_HOST = os.environ["POSTGRESQL_HOST"]
 POSTGRESQL_PORT = int(os.environ["POSTGRESQL_PORT"])
 POSTGRESQL_DB_NAME = os.environ["POSTGRESQL_DB_NAME"]
+AUTH0_DOMAIN = os.environ["AUTH0_DOMAIN"]
+AUTH0_CLIENT_ID = os.environ["AUTH0_CLIENT_ID"]
+AUTH0_CLIENT_SECRET = os.environ["AUTH0_CLIENT_SECRET"]
 
 logger = logging.getLogger(__name__)  # Create the logger with the specified name.
 logger.setLevel(logging.WARNING)  # Set the logging level of the logger.
@@ -28,7 +32,7 @@ def lambda_handler(event, context):
     :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
     :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
     """
-    # Since the connection with the database were defined outside of the function, we create global variable.
+    # Since the connection with the database were defined outside of the function, we create the global variable.
     global postgresql_connection
     if not postgresql_connection:
         try:
@@ -44,7 +48,10 @@ def lambda_handler(event, context):
             sys.exit(1)
 
     # Define the values of the data passed to the function.
-    auth0_user_id = event["arguments"]["input"]["auth0UserId"]
+    try:
+        auth0_user_id = event["arguments"]["input"]["auth0UserId"]
+    except KeyError:
+        auth0_user_id = None
     try:
         auth0_metadata = event["arguments"]["input"]["auth0Metadata"]
     except KeyError:
@@ -80,7 +87,8 @@ def lambda_handler(event, context):
     try:
         internal_user_profile_photo_url = event["arguments"]["input"]["userProfilePhotoUrl"]
     except KeyError:
-        internal_user_profile_photo_url = None
+        internal_user_profile_photo_url = "https://3beep-public-assets.s3.eu-central-1.amazonaws.com/userpics" \
+                                          "/undefined.png"
     try:
         internal_user_position_name = event["arguments"]["input"]["userPositionName"]
     except KeyError:
@@ -101,6 +109,23 @@ def lambda_handler(event, context):
         organization_id = event["arguments"]["input"]["organizationId"]
     except KeyError:
         organization_id = None
+    try:
+        password = event["arguments"]["input"]["password"]
+    except KeyError:
+        password = None
+
+    # Create a user in the Auth0.
+    if auth0_user_id is None and auth0_metadata is None and password is not None:
+        access_token = get_access_token_from_auth0()
+        if access_token is not None:
+            auth0_metadata = create_user_in_auth0(
+                access_token,
+                internal_user_primary_email,
+                password,
+                internal_user_first_name,
+                internal_user_last_name
+            )
+            auth0_user_id = auth0_metadata["user_id"]
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
@@ -309,3 +334,92 @@ def lambda_handler(event, context):
 
     # Return the full information about the internal user as the response.
     return internal_user
+
+
+def get_access_token_from_auth0():
+    """
+    Function name:
+    get_access_token_from_auth0
+
+    Function description:
+    The main task of this function is to get access token from Auth0.
+    """
+    try:
+        # Make the POST request to the Auth0.
+        request_url = "{0}/oauth/token".format(AUTH0_DOMAIN)
+        headers = {
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "client_id": AUTH0_CLIENT_ID,
+            "client_secret": AUTH0_CLIENT_SECRET,
+            "audience": "{0}/api/v2/".format(AUTH0_DOMAIN),
+            "grant_type": "client_credentials"
+        }
+        response = requests.post(
+            request_url,
+            json=payload,
+            headers=headers
+        )
+        response.raise_for_status()
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # Determine the value of the access token.
+    try:
+        access_token = response.json()["access_token"]
+    except KeyError:
+        access_token = None
+
+    # Return the access token.
+    return access_token
+
+
+def create_user_in_auth0(access_token, user_primary_email, password, user_first_name, user_last_name):
+    """
+    Function name:
+    create_user_in_auth0
+
+    Function description:
+    The main task of this function is to create new user in the Auth0.
+    Docs: https://auth0.com/docs/api/management/v2#!/Users/post_users
+    """
+    try:
+        # Make the POST request to the Auth0.
+        request_url = "{0}/api/v2/users".format(AUTH0_DOMAIN)
+
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer {0}".format(access_token)
+        }
+
+        payload = {
+            "connection": "Username-Password-Authentication",
+            "email": user_primary_email,
+            "email_verified": False,
+            "verify_email": False,
+            "blocked": False,
+            "password": password,
+            "name": "{0} {1}".format(user_first_name, user_last_name)
+        }
+
+        if user_first_name is not None:
+            payload["given_name"] = user_first_name
+        if user_last_name is not None:
+            payload["family_name"] = user_last_name
+        if user_primary_email is not None:
+            payload["name"] = user_primary_email
+
+        response = requests.post(
+            request_url,
+            json=payload,
+            headers=headers
+        )
+        response.raise_for_status()
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # Return the response.
+    return response.json()

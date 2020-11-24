@@ -11,11 +11,19 @@ Parameters:
         Type: String
     PostgreSQLDBName:
         Type: String
+    Auth0Domain:
+        Type: String
+    Auth0ClientId:
+        Type: String
+    Auth0ClientSecret:
+        Type: String
     EnvironmentName:
         Type: String
     DatabasesLayerARN:
         Type: String
     UtilsLayerARN:
+        Type: String
+    RequestsLayerARN:
         Type: String
 Globals:
     Function:
@@ -34,6 +42,12 @@ Globals:
                     Fn::Sub: "${PostgreSQLPort}"
                 POSTGRESQL_DB_NAME:
                     Fn::Sub: "${PostgreSQLDBName}"
+                AUTH0_DOMAIN:
+                    Fn::Sub: "${Auth0Domain}"
+                AUTH0_CLIENT_ID:
+                    Fn::Sub: "${Auth0ClientId}"
+                AUTH0_CLIENT_SECRET:
+                    Fn::Sub: "${Auth0ClientSecret}"
 Resources:
     CreateIdentifiedUser:
         Type: AWS::Serverless::Function
@@ -55,6 +69,7 @@ Resources:
             Layers:
                 - Fn::Sub: "${DatabasesLayerARN}"
                 - Fn::Sub: "${UtilsLayerARN}"
+                - Fn::Sub: "${RequestsLayerARN}"
     CreateOrganization:
         Type: AWS::Serverless::Function
         Properties:
