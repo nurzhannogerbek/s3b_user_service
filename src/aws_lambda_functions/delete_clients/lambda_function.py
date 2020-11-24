@@ -54,8 +54,8 @@ def lambda_handler(event, context):
     # Prepare the SQL request that get an aggregated list of IDs by user type.
     statement = """
     select
-        array_remove(array_agg(distinct identified_user_id), null) as identified_users_ids,
-        array_remove(array_agg(distinct unidentified_user_id), null) as unidentified_users_ids
+        array_remove(array_agg(distinct identified_user_id), null)::text[] as identified_users_ids,
+        array_remove(array_agg(distinct unidentified_user_id), null)::text[] as unidentified_users_ids
     from
         users
     where user_id in ({0});
@@ -81,6 +81,12 @@ def lambda_handler(event, context):
         unidentified_users_ids = aggregated_data["unidentified_users_ids"]
     except KeyError:
         unidentified_users_ids = None
+
+    print("identified_users_ids:")
+    print(type(identified_users_ids))
+
+    print("unidentified_users_ids:")
+    print(type(unidentified_users_ids))
 
     if identified_users_ids is not None:
         # Convert string array with identified users' ids to the string data type.
