@@ -54,7 +54,7 @@ def lambda_handler(event, context):
     # Prepare the SQL request that get an aggregated list of IDs by user type.
     statement = """
     select
-        array_remove(array_agg(distinct internal_user_id), null) as internal_users_ids
+        array_remove(array_agg(distinct internal_user_id), null)::text[] as internal_users_ids
     from
         users
     where user_id in ({0});
@@ -77,7 +77,7 @@ def lambda_handler(event, context):
     except KeyError:
         internal_users_ids = None
 
-    if internal_users_ids is not None:
+    if len(internal_users_ids) != 0:
         # Convert string array with internal users' ids to the string data type.
         converted_internal_users_ids = ", ".join("'{0}'".format(user_id) for user_id in internal_users_ids)
 

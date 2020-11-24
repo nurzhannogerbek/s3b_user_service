@@ -73,22 +73,10 @@ def lambda_handler(event, context):
 
     # Define the ids.
     aggregated_data = cursor.fetchone()
-    try:
-        identified_users_ids = aggregated_data["identified_users_ids"]
-    except KeyError:
-        identified_users_ids = None
-    try:
-        unidentified_users_ids = aggregated_data["unidentified_users_ids"]
-    except KeyError:
-        unidentified_users_ids = None
+    identified_users_ids = aggregated_data["identified_users_ids"]
+    unidentified_users_ids = aggregated_data["unidentified_users_ids"]
 
-    print("identified_users_ids:")
-    print(type(identified_users_ids))
-
-    print("unidentified_users_ids:")
-    print(type(unidentified_users_ids))
-
-    if identified_users_ids is not None:
+    if len(identified_users_ids) != 0:
         # Convert string array with identified users' ids to the string data type.
         converted_identified_users_ids = ", ".join("'{0}'".format(user_id) for user_id in identified_users_ids)
 
@@ -112,7 +100,7 @@ def lambda_handler(event, context):
         # After the successful execution of the query commit your changes to the database.
         postgresql_connection.commit()
 
-    if unidentified_users_ids is not None:
+    if len(unidentified_users_ids) != 0:
         # Convert string array with unidentified users' ids to the string data type.
         converted_unidentified_users_ids = ", ".join("'{0}'".format(user_id) for user_id in unidentified_users_ids)
 
