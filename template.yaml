@@ -228,6 +228,25 @@ Resources:
             Handler: lambda_function.lambda_handler
             Layers:
                 - Fn::Sub: "${DatabasesLayerARN}"
+    GetDeletedInternalUsers:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName:
+                Fn::Sub: "${EnvironmentName}GetDeletedInternalUsers"
+            CodeUri: src/aws_lambda_functions/get_deleted_internal_users
+            Handler: lambda_function.lambda_handler
+            Layers:
+                - Fn::Sub: "${DatabasesLayerARN}"
+                - Fn::Sub: "${UtilsLayerARN}"
+    RestoreDeletedInternalUsers:
+        Type: AWS::Serverless::Function
+        Properties:
+            FunctionName:
+                Fn::Sub: "${EnvironmentName}RestoreDeletedInternalUsers"
+            CodeUri: src/aws_lambda_functions/restore_deleted_internal_users
+            Handler: lambda_function.lambda_handler
+            Layers:
+                - Fn::Sub: "${DatabasesLayerARN}"
 Outputs:
     CreateIdentifiedUserARN:
         Value:
@@ -337,3 +356,15 @@ Outputs:
         Export:
             Name:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteInternalUsersARN"
+    GetDeletedInternalUsersARN:
+        Value:
+            Fn::GetAtt: GetDeletedInternalUsers.Arn
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetDeletedInternalUsersARN"
+    RestoreDeletedInternalUsersARN:
+        Value:
+            Fn::GetAtt: RestoreDeletedInternalUsers.Arn
+        Export:
+            Name:
+                Fn::Sub: "${AWS::StackName}:${EnvironmentName}RestoreDeletedInternalUsersARN"
