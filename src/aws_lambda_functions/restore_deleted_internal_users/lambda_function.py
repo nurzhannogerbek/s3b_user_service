@@ -83,7 +83,7 @@ def lambda_handler(event, context):
         update
             internal_users
         set
-            entry_deleted_date_time = now()
+            entry_deleted_date_time = null
         where
             internal_user_id in ({0});
         """.format(converted_internal_users_ids)
@@ -104,7 +104,7 @@ def lambda_handler(event, context):
         update
             users
         set
-            entry_deleted_date_time = now()
+            entry_deleted_date_time = null
         where
             user_id in ({0});
         """.format(converted_users_ids)
