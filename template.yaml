@@ -110,6 +110,7 @@ Resources:
             Layers:
                 - Fn::Sub: "${DatabasesLayerARN}"
                 - Fn::Sub: "${UtilsLayerARN}"
+                - Fn::Sub: "${RequestsLayerARN}"
     UpdateOrganization:
         Type: AWS::Serverless::Function
         Properties:
