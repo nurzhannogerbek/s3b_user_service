@@ -87,8 +87,7 @@ def lambda_handler(event, context):
     try:
         internal_user_profile_photo_url = event["arguments"]["input"]["userProfilePhotoUrl"]
     except KeyError:
-        internal_user_profile_photo_url = "https://3beep-public-assets.s3.eu-central-1.amazonaws.com/userpics" \
-                                          "/undefined.png"
+        internal_user_profile_photo_url = None
     try:
         internal_user_position_name = event["arguments"]["input"]["userPositionName"]
     except KeyError:
@@ -388,12 +387,10 @@ def create_user_in_auth0(access_token, user_primary_email, password, user_first_
     try:
         # Make the POST request to the Auth0.
         request_url = "{0}/api/v2/users".format(AUTH0_DOMAIN)
-
         headers = {
             "Content-Type": "application/json",
             "Authorization": "Bearer {0}".format(access_token)
         }
-
         payload = {
             "connection": "Username-Password-Authentication",
             "email": user_primary_email,
@@ -403,14 +400,12 @@ def create_user_in_auth0(access_token, user_primary_email, password, user_first_
             "password": password,
             "name": "{0} {1}".format(user_first_name, user_last_name)
         }
-
         if user_first_name is not None:
             payload["given_name"] = user_first_name
         if user_last_name is not None:
             payload["family_name"] = user_last_name
         if user_primary_email is not None:
             payload["name"] = user_primary_email
-
         response = requests.post(
             request_url,
             json=payload,
@@ -420,6 +415,4 @@ def create_user_in_auth0(access_token, user_primary_email, password, user_first_
     except Exception as error:
         logger.error(error)
         sys.exit(1)
-
-    # Return the response.
     return response.json()

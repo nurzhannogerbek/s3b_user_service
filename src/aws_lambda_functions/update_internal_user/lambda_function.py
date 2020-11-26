@@ -1,5 +1,6 @@
 import databases
 import utils
+import requests
 import logging
 import sys
 import os
@@ -18,6 +19,9 @@ POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 POSTGRESQL_HOST = os.environ["POSTGRESQL_HOST"]
 POSTGRESQL_PORT = int(os.environ["POSTGRESQL_PORT"])
 POSTGRESQL_DB_NAME = os.environ["POSTGRESQL_DB_NAME"]
+AUTH0_DOMAIN = os.environ["AUTH0_DOMAIN"]
+AUTH0_CLIENT_ID = os.environ["AUTH0_CLIENT_ID"]
+AUTH0_CLIENT_SECRET = os.environ["AUTH0_CLIENT_SECRET"]
 
 logger = logging.getLogger(__name__)  # Create the logger with the specified name.
 logger.setLevel(logging.WARNING)  # Set the logging level of the logger.
@@ -101,6 +105,16 @@ def lambda_handler(event, context):
         organization_id = event["arguments"]["input"]["organizationId"]
     except KeyError:
         organization_id = None
+    try:
+        password = event["arguments"]["input"]["password"]
+    except KeyError:
+        password = None
+
+    # Change the user password in the Auth0.
+    if auth0_user_id is not None and password is not None:
+        access_token = get_access_token_from_auth0()
+        if access_token is not None:
+            change_user_password_in_auth0(access_token, auth0_user_id, password)
 
     # With a dictionary cursor, the data is sent in a form of Python dictionaries.
     cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
@@ -268,3 +282,74 @@ def lambda_handler(event, context):
 
     # Return the full information about the internal user as the response.
     return internal_user
+
+
+def get_access_token_from_auth0():
+    """
+    Function name:
+    get_access_token_from_auth0
+
+    Function description:
+    The main task of this function is to get access token from Auth0.
+    """
+    try:
+        # Make the POST request to the Auth0.
+        request_url = "{0}/oauth/token".format(AUTH0_DOMAIN)
+        headers = {
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "client_id": AUTH0_CLIENT_ID,
+            "client_secret": AUTH0_CLIENT_SECRET,
+            "audience": "{0}/api/v2/".format(AUTH0_DOMAIN),
+            "grant_type": "client_credentials"
+        }
+        response = requests.post(
+            request_url,
+            json=payload,
+            headers=headers
+        )
+        response.raise_for_status()
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+
+    # Determine the value of the access token.
+    try:
+        access_token = response.json()["access_token"]
+    except KeyError:
+        access_token = None
+
+    # Return the access token.
+    return access_token
+
+
+def change_user_password_in_auth0(access_token, auth0_user_id, password):
+    """
+    Function name:
+    change_user_password_in_auth0
+
+    Function description:
+    The main task of this function is to change the password of the specific user in the database of the Auth0.
+    """
+    try:
+        # Make the POST request to the Auth0.
+        request_url = "{0}/api/v2/users/{1}".format(AUTH0_DOMAIN, auth0_user_id)
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer {0}".format(access_token)
+        }
+        payload = {
+            "password": password,
+            "connection": "Username-Password-Authentication"
+        }
+        response = requests.patch(
+            request_url,
+            data=payload,
+            headers=headers
+        )
+        response.raise_for_status()
+    except Exception as error:
+        logger.error(error)
+        sys.exit(1)
+    return None
