@@ -131,26 +131,6 @@ Resources:
             Layers:
                 - Fn::Sub: "${DatabasesLayerARN}"
                 - Fn::Sub: "${UtilsLayerARN}"
-    GetCountries:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetCountries"
-            CodeUri: src/aws_lambda_functions/get_countries
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetGenders:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetGenders"
-            CodeUri: src/aws_lambda_functions/get_genders
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
     GetInternalUser:
         Type: AWS::Serverless::Function
         Properties:
@@ -297,18 +277,6 @@ Outputs:
         Export:
             Name:
                 Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateUnidentifiedUserARN"
-    GetCountriesARN:
-        Value:
-            Fn::GetAtt: GetCountries.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetCountriesARN"
-    GetGendersARN:
-        Value:
-            Fn::GetAtt: GetGenders.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetGendersARN"
     GetInternalUserARN:
         Value:
             Fn::GetAtt: GetInternalUser.Arn
