@@ -129,14 +129,7 @@ def lambda_handler(event, context):
             end as whatsapp_username,
             genders.gender_id,
             genders.gender_technical_name,
-            genders.gender_public_name,
-            countries.country_id,
-            countries.country_short_name,
-            countries.country_official_name,
-            countries.country_alpha_2_code,
-            countries.country_alpha_3_code,
-            countries.country_numeric_code,
-            countries.country_code_top_level_domain
+            genders.gender_public_name
         from
             chat_rooms_users_relationship
         left join users on
@@ -147,8 +140,6 @@ def lambda_handler(event, context):
             users.unidentified_user_id = unidentified_users.unidentified_user_id
         left join genders on
             identified_users.gender_id = genders.gender_id
-        left join countries on
-            identified_users.country_id = countries.country_id
         where
             users.entry_deleted_date_time is null
         and
@@ -207,18 +198,14 @@ def lambda_handler(event, context):
         for index, entry in enumerate(clients_entries):
             client = dict()
             gender = dict()
-            country = dict()
             for key, value in entry.items():
                 if ("_id" in key or "_date_time" in key) and value is not None:
                     value = str(value)
                 if "gender_" in key:
                     gender[utils.camel_case(key)] = value
-                elif "country_" in key:
-                    country[utils.camel_case(key)] = value
                 else:
                     client[utils.camel_case(key)] = value
             client["gender"] = gender
-            client["country"] = country
             clients.append(client)
             if index == 0:
                 total_number_of_users = entry["total_number_of_users"]

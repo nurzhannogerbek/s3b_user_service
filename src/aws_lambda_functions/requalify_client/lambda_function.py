@@ -66,10 +66,6 @@ def lambda_handler(event, context):
         gender_id = event["arguments"]["input"]["genderId"]
     except KeyError:
         gender_id = None
-    try:
-        country_id = event["arguments"]["input"]["countryId"]
-    except KeyError:
-        country_id = None
     metadata = event["arguments"]["input"]["metadata"]
     try:
         telegram_username = event["arguments"]["input"]["telegramUsername"]
@@ -114,7 +110,6 @@ def lambda_handler(event, context):
         identified_user_secondary_phone_number,
         identified_user_profile_photo_url,
         gender_id,
-        country_id,
         metadata,
         telegram_username,
         whatsapp_profile,
@@ -132,8 +127,7 @@ def lambda_handler(event, context):
         {9},
         {10},
         {11},
-        {12},
-        {13}
+        {12}
     ) returning
         identified_user_id;
     """.format(
@@ -155,8 +149,6 @@ def lambda_handler(event, context):
         else "'{0}'".format(identified_user_profile_photo_url),
         'null' if gender_id is None or len(gender_id) == 0
         else "'{0}'".format(gender_id),
-        'null' if country_id is None or len(country_id) == 0
-        else "'{0}'".format(country_id),
         "'{0}'".format(metadata.replace("'", "''")),
         'null' if telegram_username is None or len(telegram_username) == 0
         else "'{0}'".format(telegram_username),
@@ -309,14 +301,7 @@ def lambda_handler(event, context):
         end as whatsapp_username,
         genders.gender_id,
         genders.gender_technical_name,
-        genders.gender_public_name,
-        countries.country_id,
-        countries.country_short_name,
-        countries.country_official_name,
-        countries.country_alpha_2_code,
-        countries.country_alpha_3_code,
-        countries.country_numeric_code,
-        countries.country_code_top_level_domain
+        genders.gender_public_name
     from
         users
     left join identified_users on
@@ -325,8 +310,6 @@ def lambda_handler(event, context):
         users.unidentified_user_id = unidentified_users.unidentified_user_id
     left join genders on
         identified_users.gender_id = genders.gender_id
-    left join countries on
-        identified_users.country_id = countries.country_id
     where
         users.user_id = '{0}'
     limit 1;
@@ -352,18 +335,14 @@ def lambda_handler(event, context):
     client = dict()
     if client_entry is not None:
         gender = dict()
-        country = dict()
         for key, value in client_entry.items():
             if ("_id" in key or "_date_time" in key) and value is not None:
                 value = str(value)
             if "gender_" in key:
                 gender[utils.camel_case(key)] = value
-            elif "country_" in key:
-                country[utils.camel_case(key)] = value
             else:
                 client[utils.camel_case(key)] = value
         client["gender"] = gender
-        client["country"] = country
 
     # Return the list of roles as the response.
     return client

@@ -94,10 +94,6 @@ def lambda_handler(event, context):
     except KeyError:
         gender_id = None
     try:
-        country_id = event["arguments"]["input"]["countryId"]
-    except KeyError:
-        country_id = None
-    try:
         role_id = event["arguments"]["input"]["roleId"]
     except KeyError:
         role_id = None
@@ -134,12 +130,11 @@ def lambda_handler(event, context):
         internal_user_profile_photo_url = {7},
         internal_user_position_name = {8},
         gender_id = {9},
-        country_id = {10},
-        role_id = {11},
-        organization_id = {12},
-        auth0_metadata = {13}
+        role_id = {10},
+        organization_id = {11},
+        auth0_metadata = {12}
     where
-        auth0_user_id = {14};
+        auth0_user_id = {13};
     """.format(
         'null' if internal_user_first_name is None or len(internal_user_first_name) == 0
         else "'{0}'".format(internal_user_first_name),
@@ -161,8 +156,6 @@ def lambda_handler(event, context):
         else "'{0}'".format(internal_user_position_name),
         'null' if gender_id is None or len(gender_id) == 0
         else "'{0}'".format(gender_id),
-        'null' if country_id is None or len(country_id) == 0
-        else "'{0}'".format(country_id),
         'null' if role_id is None or len(role_id) == 0
         else "'{0}'".format(role_id),
         'null' if organization_id is None or len(organization_id) == 0
@@ -200,13 +193,6 @@ def lambda_handler(event, context):
         genders.gender_id,
         genders.gender_technical_name,
         genders.gender_public_name,
-        countries.country_id,
-        countries.country_short_name,
-        countries.country_official_name,
-        countries.country_alpha_2_code,
-        countries.country_alpha_3_code,
-        countries.country_numeric_code,
-        countries.country_code_top_level_domain,
         roles.role_id,
         roles.role_technical_name,
         roles.role_public_name,
@@ -226,8 +212,6 @@ def lambda_handler(event, context):
         users.internal_user_id = internal_users.internal_user_id
     left join genders on
         internal_users.gender_id = genders.gender_id
-    left join countries on
-        internal_users.country_id = countries.country_id
     left join roles on
         internal_users.role_id = roles.role_id
     left join organizations on
@@ -259,7 +243,6 @@ def lambda_handler(event, context):
     internal_user = dict()
     if internal_user_entry is not None:
         gender = dict()
-        country = dict()
         role = dict()
         organization = dict()
         for key, value in internal_user_entry.items():
@@ -267,8 +250,6 @@ def lambda_handler(event, context):
                 value = str(value)
             if "gender_" in key:
                 gender[utils.camel_case(key)] = value
-            elif "country_" in key:
-                country[utils.camel_case(key)] = value
             elif "role_" in key:
                 role[utils.camel_case(key)] = value
             elif "organization_" in key:
@@ -276,7 +257,6 @@ def lambda_handler(event, context):
             else:
                 internal_user[utils.camel_case(key)] = value
         internal_user["gender"] = gender
-        internal_user["country"] = country
         internal_user["role"] = role
         internal_user["organization"] = organization
 

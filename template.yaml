@@ -1,339 +1,324 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Transform: AWS::Serverless-2016-10-31
+Transform: 'AWS::Serverless-2016-10-31'
 Parameters:
-    PostgreSQLUsername:
-        Type: String
-    PostgreSQLPassword:
-        Type: String
-    PostgreSQLHost:
-        Type: String
-    PostgreSQLPort:
-        Type: String
-    PostgreSQLDBName:
-        Type: String
-    Auth0Domain:
-        Type: String
-    Auth0ClientId:
-        Type: String
-    Auth0ClientSecret:
-        Type: String
-    EnvironmentName:
-        Type: String
-    DatabasesLayerARN:
-        Type: String
-    UtilsLayerARN:
-        Type: String
-    RequestsLayerARN:
-        Type: String
+  PostgreSQLUsername:
+    Type: String
+  PostgreSQLPassword:
+    Type: String
+  PostgreSQLHost:
+    Type: String
+  PostgreSQLPort:
+    Type: Number
+  PostgreSQLDBName:
+    Type: String
+  Auth0Domain:
+    Type: String
+  Auth0ClientId:
+    Type: String
+  Auth0ClientSecret:
+    Type: String
+  EnvironmentName:
+    Type: String
+  DatabasesLayerARN:
+    Type: String
+  UtilsLayerARN:
+    Type: String
+  RequestsLayerARN:
+    Type: String
 Globals:
-    Function:
-        Runtime: python3.8
-        MemorySize: 3008
-        Timeout: 900
-        Environment:
-            Variables:
-                POSTGRESQL_USERNAME:
-                    Fn::Sub: "${PostgreSQLUsername}"
-                POSTGRESQL_PASSWORD:
-                    Fn::Sub: "${PostgreSQLPassword}"
-                POSTGRESQL_HOST:
-                    Fn::Sub: "${PostgreSQLHost}"
-                POSTGRESQL_PORT:
-                    Fn::Sub: "${PostgreSQLPort}"
-                POSTGRESQL_DB_NAME:
-                    Fn::Sub: "${PostgreSQLDBName}"
-                AUTH0_DOMAIN:
-                    Fn::Sub: "${Auth0Domain}"
-                AUTH0_CLIENT_ID:
-                    Fn::Sub: "${Auth0ClientId}"
-                AUTH0_CLIENT_SECRET:
-                    Fn::Sub: "${Auth0ClientSecret}"
+  Function:
+    Runtime: python3.8
+    MemorySize: 10240
+    Timeout: 900
+    Environment:
+      Variables:
+        POSTGRESQL_USERNAME:
+          'Fn::Sub': '${PostgreSQLUsername}'
+        POSTGRESQL_PASSWORD:
+          'Fn::Sub': '${PostgreSQLPassword}'
+        POSTGRESQL_HOST:
+          'Fn::Sub': '${PostgreSQLHost}'
+        POSTGRESQL_PORT:
+          'Fn::Sub': '${PostgreSQLPort}'
+        POSTGRESQL_DB_NAME:
+          'Fn::Sub': '${PostgreSQLDBName}'
 Resources:
-    CreateIdentifiedUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}CreateIdentifiedUser"
-            CodeUri: src/aws_lambda_functions/create_identified_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    CreateInternalUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}CreateInternalUser"
-            CodeUri: src/aws_lambda_functions/create_internal_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-                - Fn::Sub: "${RequestsLayerARN}"
-    CreateOrganization:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}CreateOrganization"
-            CodeUri: src/aws_lambda_functions/create_organization
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    CreateUnidentifiedUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}CreateUnidentifiedUser"
-            CodeUri: src/aws_lambda_functions/create_unidentified_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    UpdateIdentifiedUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}UpdateIdentifiedUser"
-            CodeUri: src/aws_lambda_functions/update_identified_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    UpdateInternalUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}UpdateInternalUser"
-            CodeUri: src/aws_lambda_functions/update_internal_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-                - Fn::Sub: "${RequestsLayerARN}"
-    UpdateOrganization:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}UpdateOrganization"
-            CodeUri: src/aws_lambda_functions/update_organization
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    UpdateUnidentifiedUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}UpdateUnidentifiedUser"
-            CodeUri: src/aws_lambda_functions/update_unidentified_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetInternalUser:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetInternalUser"
-            CodeUri: src/aws_lambda_functions/get_internal_user
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetInternalUsers:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetInternalUsers"
-            CodeUri: src/aws_lambda_functions/get_internal_users
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetRoles:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetRoles"
-            CodeUri: src/aws_lambda_functions/get_roles
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetClient:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetClient"
-            CodeUri: src/aws_lambda_functions/get_client
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    GetClients:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetClients"
-            CodeUri: src/aws_lambda_functions/get_clients
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    RequalifyClient:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}RequalifyClient"
-            CodeUri: src/aws_lambda_functions/requalify_client
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    DeleteClients:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}DeleteClients"
-            CodeUri: src/aws_lambda_functions/delete_clients
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-    DeleteInternalUsers:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}DeleteInternalUsers"
-            CodeUri: src/aws_lambda_functions/delete_internal_users
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-    GetDeletedInternalUsers:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}GetDeletedInternalUsers"
-            CodeUri: src/aws_lambda_functions/get_deleted_internal_users
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
-                - Fn::Sub: "${UtilsLayerARN}"
-    RestoreDeletedInternalUsers:
-        Type: AWS::Serverless::Function
-        Properties:
-            FunctionName:
-                Fn::Sub: "${EnvironmentName}RestoreDeletedInternalUsers"
-            CodeUri: src/aws_lambda_functions/restore_deleted_internal_users
-            Handler: lambda_function.lambda_handler
-            Layers:
-                - Fn::Sub: "${DatabasesLayerARN}"
+  CreateIdentifiedUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}CreateIdentifiedUser'
+      CodeUri: src/aws_lambda_functions/create_identified_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  CreateInternalUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}CreateInternalUser'
+      CodeUri: src/aws_lambda_functions/create_internal_user
+      Handler: lambda_function.lambda_handler
+      Environment:
+        AUTH0_DOMAIN:
+          'Fn::Sub': '${Auth0Domain}'
+        AUTH0_CLIENT_ID:
+          'Fn::Sub': '${Auth0ClientId}'
+        AUTH0_CLIENT_SECRET:
+          'Fn::Sub': '${Auth0ClientSecret}'
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+        - 'Fn::Sub': '${RequestsLayerARN}'
+  CreateOrganization:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}CreateOrganization'
+      CodeUri: src/aws_lambda_functions/create_organization
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  CreateUnidentifiedUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}CreateUnidentifiedUser'
+      CodeUri: src/aws_lambda_functions/create_unidentified_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  UpdateIdentifiedUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}UpdateIdentifiedUser'
+      CodeUri: src/aws_lambda_functions/update_identified_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  UpdateInternalUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}UpdateInternalUser'
+      CodeUri: src/aws_lambda_functions/update_internal_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+        - 'Fn::Sub': '${RequestsLayerARN}'
+  UpdateUnidentifiedUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}UpdateUnidentifiedUser'
+      CodeUri: src/aws_lambda_functions/update_unidentified_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  GetInternalUser:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetInternalUser'
+      CodeUri: src/aws_lambda_functions/get_internal_user
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  GetInternalUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetInternalUsers'
+      CodeUri: src/aws_lambda_functions/get_internal_users
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  GetRoles:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetRoles'
+      CodeUri: src/aws_lambda_functions/get_roles
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  GetClient:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetClient'
+      CodeUri: src/aws_lambda_functions/get_client
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  GetClients:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetClients'
+      CodeUri: src/aws_lambda_functions/get_clients
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  RequalifyClient:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}RequalifyClient'
+      CodeUri: src/aws_lambda_functions/requalify_client
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  DeleteClients:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}DeleteClients'
+      CodeUri: src/aws_lambda_functions/delete_clients
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+  DeleteInternalUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}DeleteInternalUsers'
+      CodeUri: src/aws_lambda_functions/delete_internal_users
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+  GetDeletedInternalUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}GetDeletedInternalUsers'
+      CodeUri: src/aws_lambda_functions/get_deleted_internal_users
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
+        - 'Fn::Sub': '${UtilsLayerARN}'
+  RestoreDeletedInternalUsers:
+    Type: 'AWS::Serverless::Function'
+    Properties:
+      FunctionName:
+        'Fn::Sub': '${EnvironmentName}RestoreDeletedInternalUsers'
+      CodeUri: src/aws_lambda_functions/restore_deleted_internal_users
+      Handler: lambda_function.lambda_handler
+      Layers:
+        - 'Fn::Sub': '${DatabasesLayerARN}'
 Outputs:
-    CreateIdentifiedUserARN:
-        Value:
-            Fn::GetAtt: CreateIdentifiedUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateIdentifiedUserARN"
-    CreateInternalUserARN:
-        Value:
-            Fn::GetAtt: CreateInternalUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateInternalUserARN"
-    CreateOrganizationARN:
-        Value:
-            Fn::GetAtt: CreateOrganization.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateOrganizationARN"
-    CreateUnidentifiedUserARN:
-        Value:
-            Fn::GetAtt: CreateUnidentifiedUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}CreateUnidentifiedUserARN"
-    UpdateIdentifiedUserARN:
-        Value:
-            Fn::GetAtt: UpdateIdentifiedUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateIdentifiedUserARN"
-    UpdateInternalUserARN:
-        Value:
-            Fn::GetAtt: UpdateInternalUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateInternalUserARN"
-    UpdateOrganizationARN:
-        Value:
-            Fn::GetAtt: UpdateOrganization.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateOrganizationARN"
-    UpdateUnidentifiedUserARN:
-        Value:
-            Fn::GetAtt: UpdateUnidentifiedUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}UpdateUnidentifiedUserARN"
-    GetInternalUserARN:
-        Value:
-            Fn::GetAtt: GetInternalUser.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUserARN"
-    GetInternalUsersARN:
-        Value:
-            Fn::GetAtt: GetInternalUsers.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetInternalUsersARN"
-    GetRolesARN:
-        Value:
-            Fn::GetAtt: GetRoles.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetRolesARN"
-    GetClientARN:
-        Value:
-            Fn::GetAtt: GetClient.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientARN"
-    GetClientsARN:
-        Value:
-            Fn::GetAtt: GetClients.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetClientsARN"
-    RequalifyClientARN:
-        Value:
-            Fn::GetAtt: RequalifyClient.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}RequalifyClientARN"
-    DeleteClientsARN:
-        Value:
-            Fn::GetAtt: DeleteClients.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteClientsARN"
-    DeleteInternalUsersARN:
-        Value:
-            Fn::GetAtt: DeleteInternalUsers.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}DeleteInternalUsersARN"
-    GetDeletedInternalUsersARN:
-        Value:
-            Fn::GetAtt: GetDeletedInternalUsers.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}GetDeletedInternalUsersARN"
-    RestoreDeletedInternalUsersARN:
-        Value:
-            Fn::GetAtt: RestoreDeletedInternalUsers.Arn
-        Export:
-            Name:
-                Fn::Sub: "${AWS::StackName}:${EnvironmentName}RestoreDeletedInternalUsersARN"
+  CreateIdentifiedUserARN:
+    Value:
+      'Fn::GetAtt': CreateIdentifiedUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateIdentifiedUserARN'
+  CreateInternalUserARN:
+    Value:
+      'Fn::GetAtt': CreateInternalUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateInternalUserARN'
+  CreateOrganizationARN:
+    Value:
+      'Fn::GetAtt': CreateOrganization.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateOrganizationARN'
+  CreateUnidentifiedUserARN:
+    Value:
+      'Fn::GetAtt': CreateUnidentifiedUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateUnidentifiedUserARN'
+  UpdateIdentifiedUserARN:
+    Value:
+      'Fn::GetAtt': UpdateIdentifiedUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}UpdateIdentifiedUserARN'
+  UpdateInternalUserARN:
+    Value:
+      'Fn::GetAtt': UpdateInternalUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}UpdateInternalUserARN'
+  UpdateUnidentifiedUserARN:
+    Value:
+      'Fn::GetAtt': UpdateUnidentifiedUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}UpdateUnidentifiedUserARN'
+  GetInternalUserARN:
+    Value:
+      'Fn::GetAtt': GetInternalUser.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetInternalUserARN'
+  GetInternalUsersARN:
+    Value:
+      'Fn::GetAtt': GetInternalUsers.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetInternalUsersARN'
+  GetRolesARN:
+    Value:
+      'Fn::GetAtt': GetRoles.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetRolesARN'
+  GetClientARN:
+    Value:
+      'Fn::GetAtt': GetClient.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetClientARN'
+  GetClientsARN:
+    Value:
+      'Fn::GetAtt': GetClients.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetClientsARN'
+  RequalifyClientARN:
+    Value:
+      'Fn::GetAtt': RequalifyClient.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}RequalifyClientARN'
+  DeleteClientsARN:
+    Value:
+      'Fn::GetAtt': DeleteClients.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}DeleteClientsARN'
+  DeleteInternalUsersARN:
+    Value:
+      'Fn::GetAtt': DeleteInternalUsers.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}DeleteInternalUsersARN'
+  GetDeletedInternalUsersARN:
+    Value:
+      'Fn::GetAtt': GetDeletedInternalUsers.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}GetDeletedInternalUsersARN'
+  RestoreDeletedInternalUsersARN:
+    Value:
+      'Fn::GetAtt': RestoreDeletedInternalUsers.Arn
+    Export:
+      Name:
+        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}RestoreDeletedInternalUsersARN'

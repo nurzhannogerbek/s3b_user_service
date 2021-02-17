@@ -71,13 +71,6 @@ def lambda_handler(event, context):
         genders.gender_id,
         genders.gender_technical_name,
         genders.gender_public_name,
-        countries.country_id,
-        countries.country_short_name,
-        countries.country_official_name,
-        countries.country_alpha_2_code,
-        countries.country_alpha_3_code,
-        countries.country_numeric_code,
-        countries.country_code_top_level_domain,
         roles.role_id,
         roles.role_technical_name,
         roles.role_public_name,
@@ -97,8 +90,6 @@ def lambda_handler(event, context):
         users.internal_user_id = internal_users.internal_user_id
     left join genders on
         internal_users.gender_id = genders.gender_id
-    left join countries on
-        internal_users.country_id = countries.country_id
     left join roles on
         internal_users.role_id = roles.role_id
     left join organizations on
@@ -139,7 +130,6 @@ def lambda_handler(event, context):
         for index, entry in enumerate(internal_users_entries):
             internal_user = dict()
             gender = dict()
-            country = dict()
             role = dict()
             organization = dict()
             for key, value in entry.items():
@@ -147,8 +137,6 @@ def lambda_handler(event, context):
                     value = str(value)
                 if "gender_" in key:
                     gender[utils.camel_case(key)] = value
-                elif "country_" in key:
-                    country[utils.camel_case(key)] = value
                 elif "role_" in key:
                     role[utils.camel_case(key)] = value
                 elif "organization_" in key:
@@ -156,7 +144,6 @@ def lambda_handler(event, context):
                 else:
                     internal_user[utils.camel_case(key)] = value
             internal_user["gender"] = gender
-            internal_user["country"] = country
             internal_user["role"] = role
             internal_user["organization"] = organization
             internal_users.append(internal_user)

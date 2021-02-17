@@ -81,10 +81,6 @@ def lambda_handler(event, context):
         gender_id = event["arguments"]["input"]["genderId"]
     except KeyError:
         gender_id = None
-    try:
-        country_id = event["arguments"]["input"]["countryId"]
-    except KeyError:
-        country_id = None
     metadata = event["arguments"]["input"]["metadata"]
     try:
         telegram_username = event["arguments"]["input"]["telegramUsername"]
@@ -116,11 +112,10 @@ def lambda_handler(event, context):
         identified_user_secondary_phone_number = {6},
         identified_user_profile_photo_url = {7},
         gender_id = {8},
-        country_id = {9},
-        metadata = {10},
-        telegram_username = {11},
-        whatsapp_profile = {12},
-        whatsapp_username = {13}
+        metadata = {9},
+        telegram_username = {10},
+        whatsapp_profile = {11},
+        whatsapp_username = {12}
     where
         identified_user_id = (
             select
@@ -128,7 +123,7 @@ def lambda_handler(event, context):
             from
                 users
             where
-                user_id = {14}
+                user_id = {13}
             and
                 identified_user_id is not null
             limit 1
@@ -152,8 +147,6 @@ def lambda_handler(event, context):
         else "'{0}'".format(identified_user_profile_photo_url),
         'null' if gender_id is None or len(gender_id) == 0
         else "'{0}'".format(gender_id),
-        'null' if country_id is None or len(country_id) == 0
-        else "'{0}'".format(country_id),
         "'{0}'".format(metadata.replace("'", "''")),
         'null' if telegram_username is None or len(telegram_username) == 0
         else "'{0}'".format(telegram_username),
@@ -189,13 +182,6 @@ def lambda_handler(event, context):
         genders.gender_id,
         genders.gender_technical_name,
         genders.gender_public_name,
-        countries.country_id,
-        countries.country_short_name,
-        countries.country_official_name,
-        countries.country_alpha_2_code,
-        countries.country_alpha_3_code,
-        countries.country_numeric_code,
-        countries.country_code_top_level_domain,
         identified_users.metadata::text,
         identified_users.telegram_username,
         identified_users.whatsapp_profile,
@@ -206,8 +192,6 @@ def lambda_handler(event, context):
         users.identified_user_id = identified_users.identified_user_id
     left join genders on
         identified_users.gender_id = genders.gender_id
-    left join countries on
-        identified_users.country_id = countries.country_id
     where
         users.user_id = '{0}'
     limit 1;
@@ -230,18 +214,14 @@ def lambda_handler(event, context):
     identified_user = dict()
     if identified_user_entry is not None:
         gender = dict()
-        country = dict()
         for key, value in identified_user_entry.items():
             if "_id" in key and value is not None:
                 value = str(value)
             if "gender_" in key:
                 gender[utils.camel_case(key)] = value
-            elif "country_" in key:
-                country[utils.camel_case(key)] = value
             else:
                 identified_user[utils.camel_case(key)] = value
         identified_user["gender"] = gender
-        identified_user["country"] = country
 
     # Return the full information of the new created user as the response.
     return identified_user
