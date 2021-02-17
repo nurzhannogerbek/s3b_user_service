@@ -61,12 +61,13 @@ Resources:
       CodeUri: src/aws_lambda_functions/create_internal_user
       Handler: lambda_function.lambda_handler
       Environment:
-        AUTH0_DOMAIN:
-          'Fn::Sub': '${Auth0Domain}'
-        AUTH0_CLIENT_ID:
-          'Fn::Sub': '${Auth0ClientId}'
-        AUTH0_CLIENT_SECRET:
-          'Fn::Sub': '${Auth0ClientSecret}'
+        Variables:
+          AUTH0_DOMAIN:
+            'Fn::Sub': '${Auth0Domain}'
+          AUTH0_CLIENT_ID:
+            'Fn::Sub': '${Auth0ClientId}'
+          AUTH0_CLIENT_SECRET:
+            'Fn::Sub': '${Auth0ClientSecret}'
       Layers:
         - 'Fn::Sub': '${DatabasesLayerARN}'
         - 'Fn::Sub': '${UtilsLayerARN}'
