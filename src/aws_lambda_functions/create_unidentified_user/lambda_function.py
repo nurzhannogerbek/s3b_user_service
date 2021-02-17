@@ -224,7 +224,7 @@ def get_unidentified_user_data(**kwargs) -> Any:
     select
         users.user_id::text,
         users.user_nickname::text,
-        users.user_profile_photo_url:text,
+        users.user_profile_photo_url::text,
         unidentified_users.metadata::text
     from
         users
