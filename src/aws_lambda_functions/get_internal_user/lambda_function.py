@@ -226,7 +226,7 @@ def analyze_and_format_internal_user_data(**kwargs) -> Any:
                 gender[utils.camel_case(key)] = value
             elif key.startswith("role_"):
                 role[utils.camel_case(key)] = value
-            elif key.startswith("organization_"):
+            elif "organization_" in key:
                 organization[utils.camel_case(key)] = value
             else:
                 internal_user[utils.camel_case(key)] = value
