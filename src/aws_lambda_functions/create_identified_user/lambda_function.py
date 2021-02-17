@@ -260,7 +260,7 @@ def get_identified_user_data(**kwargs) -> Any:
     select
         users.user_id::text,
         users.user_nickname::text,
-        users.user_profile_photo_url:text,
+        users.user_profile_photo_url::text,
         identified_users.identified_user_first_name::text as user_first_name,
         identified_users.identified_user_last_name::text as user_last_name,
         identified_users.identified_user_middle_name::text as user_middle_name,
