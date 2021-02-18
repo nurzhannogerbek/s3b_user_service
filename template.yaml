@@ -72,16 +72,6 @@ Resources:
         - 'Fn::Sub': '${DatabasesLayerARN}'
         - 'Fn::Sub': '${UtilsLayerARN}'
         - 'Fn::Sub': '${RequestsLayerARN}'
-  CreateOrganization:
-    Type: 'AWS::Serverless::Function'
-    Properties:
-      FunctionName:
-        'Fn::Sub': '${EnvironmentName}CreateOrganization'
-      CodeUri: src/aws_lambda_functions/create_organization
-      Handler: lambda_function.lambda_handler
-      Layers:
-        - 'Fn::Sub': '${DatabasesLayerARN}'
-        - 'Fn::Sub': '${UtilsLayerARN}'
   CreateUnidentifiedUser:
     Type: 'AWS::Serverless::Function'
     Properties:
@@ -233,12 +223,6 @@ Outputs:
     Export:
       Name:
         'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateInternalUserARN'
-  CreateOrganizationARN:
-    Value:
-      'Fn::GetAtt': CreateOrganization.Arn
-    Export:
-      Name:
-        'Fn::Sub': '${AWS::StackName}:${EnvironmentName}CreateOrganizationARN'
   CreateUnidentifiedUserARN:
     Value:
       'Fn::GetAtt': CreateUnidentifiedUser.Arn

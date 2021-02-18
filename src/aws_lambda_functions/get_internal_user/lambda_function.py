@@ -174,13 +174,15 @@ def get_internal_user_data(**kwargs) -> Any:
         roles.role_description::text,
         organizations.organization_id::text,
         organizations.organization_name::text,
-        organizations.organization_description::text,
+        organizations.organization_level::smallint,
         organizations.parent_organization_id::text,
         organizations.parent_organization_name::text,
-        organizations.parent_organization_description::text,
+        organizations.parent_organization_level::smallint,
         organizations.root_organization_id::text,
         organizations.root_organization_name::text,
-        organizations.root_organization_description::text
+        organizations.root_organization_level::smallint,
+        organizations.tree_organization_id::text,
+        organizations.tree_organization_name::text
     from
         users
     left join internal_users on
