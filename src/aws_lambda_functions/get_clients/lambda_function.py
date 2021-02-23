@@ -298,10 +298,10 @@ def analyze_and_format_clients_data(**kwargs) -> Any:
         for index, record in enumerate(clients_data):
             client, gender = {}, {}
             for key, value in record.items():
-                if key.startswith("gender_"):
-                    gender[utils.camel_case(key)] = value
-                elif key == "total_number_of_users":
+                if key == "total_number_of_users":
                     break
+                elif key.startswith("gender_"):
+                    gender[utils.camel_case(key)] = value
                 else:
                     client[utils.camel_case(key)] = value
             client["gender"] = gender

@@ -237,14 +237,14 @@ def analyze_and_format_internal_users_data(**kwargs) -> Any:
         for index, record in enumerate(internal_users_data):
             internal_user, gender, role, organization = {}, {}, {}, {}
             for key, value in record.items():
-                if key.startswith("gender_"):
+                if key == "total_number_of_users":
+                    break
+                elif key.startswith("gender_"):
                     gender[utils.camel_case(key)] = value
                 elif key.startswith("role_"):
                     role[utils.camel_case(key)] = value
                 elif "organization_" in key:
                     organization[utils.camel_case(key)] = value
-                elif key == "total_number_of_users":
-                    break
                 else:
                     internal_user[utils.camel_case(key)] = value
             internal_user["gender"] = gender
