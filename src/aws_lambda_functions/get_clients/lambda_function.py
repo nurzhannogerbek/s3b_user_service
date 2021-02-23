@@ -157,7 +157,7 @@ def get_clients_data(**kwargs) -> List[Dict[AnyStr, Any]]:
         logger.error(error)
         raise Exception(error)
 
-    # Prepare the SQL request that returns the list of customers who have interacted with the company.
+    # Prepare the SQL request that returns the list of clients who have interacted with the company.
     sql_statement = """
     select
         count(*) over() as total_items_count,
@@ -279,7 +279,7 @@ def get_clients_data(**kwargs) -> List[Dict[AnyStr, Any]]:
         logger.error(error)
         raise Exception(error)
 
-    # Return the list of customers who have interacted with the company.
+    # Return the list of clients who have interacted with the company.
     return cursor.fetchall()
 
 
@@ -341,7 +341,7 @@ def lambda_handler(event, context):
     # Define the instances of the database connections.
     postgresql_connection = results_of_tasks["postgresql_connection"]
 
-    # Get a list of customers who have interacted with the company.
+    # Get a list of clients who have interacted with the company.
     clients_data = get_clients_data(
         postgresql_connection=postgresql_connection,
         sql_arguments={
