@@ -158,14 +158,14 @@ def get_client_data(**kwargs) -> Any:
     # Prepare the SQL request that return information about the client.
     sql_statement = """
     select
+        users.user_id::text,
+        users.user_nickname::text,
+        users.user_profile_photo_url::text,
         case
             when users.identified_user_id is not null and users.unidentified_user_id is null
             then 'identified_user'::text
             else 'unidentified_user'::text
         end as user_type,
-        users.user_id::text,
-        users.user_nickname::text,
-        users.user_profile_photo_url::text,
         users.entry_created_date_time::text as created_date_time,
         case
             when users.identified_user_id is not null and users.unidentified_user_id is null
