@@ -306,7 +306,7 @@ def lambda_handler(event, context):
         }
     )
 
-    # Define variables that stores formatted information about client.
+    # Define variable that stores formatted information about client.
     client = analyze_and_format_client_data(client_data=client_data)
 
     # Return the information of the client.

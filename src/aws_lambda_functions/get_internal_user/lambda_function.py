@@ -274,7 +274,7 @@ def lambda_handler(event, context):
         }
     )
 
-    # Define variables that stores formatted information about internal user.
+    # Define variable that stores formatted information about internal user.
     internal_user = analyze_and_format_internal_user_data(internal_user_data=internal_user_data)
 
     # Return the information of the internal user.

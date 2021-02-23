@@ -1,38 +1,32 @@
-import databases
-import utils
 import logging
-import sys
 import os
 from psycopg2.extras import RealDictCursor
+from functools import wraps
+from typing import *
+import databases
+import utils
 
-"""
-Define the connection to the database outside of the "lambda_handler" function.
-The connection to the database will be created the first time the function is called.
-Any subsequent function call will use the same database connection.
-"""
-postgresql_connection = None
+# Configure the logging tool in the AWS Lambda function.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
-# Define databases settings parameters.
+# Initialize constants with parameters to configure.
 POSTGRESQL_USERNAME = os.environ["POSTGRESQL_USERNAME"]
 POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 POSTGRESQL_HOST = os.environ["POSTGRESQL_HOST"]
 POSTGRESQL_PORT = int(os.environ["POSTGRESQL_PORT"])
 POSTGRESQL_DB_NAME = os.environ["POSTGRESQL_DB_NAME"]
 
-logger = logging.getLogger(__name__)  # Create the logger with the specified name.
-logger.setLevel(logging.WARNING)  # Set the logging level of the logger.
+# The connection to the database will be created the first time the AWS Lambda function is called.
+# Any subsequent call to the function will use the same database connection until the container stops.
+POSTGRESQL_CONNECTION = None
 
 
-def lambda_handler(event, context):
-    """
-    :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
-    :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
-    """
-    # Since the connection with the database were defined outside of the function, we create global variable.
-    global postgresql_connection
-    if not postgresql_connection:
+def reuse_or_recreate_postgresql_connection():
+    global POSTGRESQL_CONNECTION
+    if not POSTGRESQL_CONNECTION:
         try:
-            postgresql_connection = databases.create_postgresql_connection(
+            POSTGRESQL_CONNECTION = databases.create_postgresql_connection(
                 POSTGRESQL_USERNAME,
                 POSTGRESQL_PASSWORD,
                 POSTGRESQL_HOST,
@@ -41,48 +35,87 @@ def lambda_handler(event, context):
             )
         except Exception as error:
             logger.error(error)
-            sys.exit(1)
+            raise Exception("Unable to connect to the PostgreSQL database.")
+    return POSTGRESQL_CONNECTION
 
-    # With a dictionary cursor, the data is sent in a form of Python dictionaries.
-    cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+
+def postgresql_wrapper(function):
+    @wraps(function)
+    def wrapper(**kwargs):
+        try:
+            postgresql_connection = kwargs["postgresql_connection"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+        cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+        kwargs["cursor"] = cursor
+        result = function(**kwargs)
+        cursor.close()
+        return result
+    return wrapper
+
+
+@postgresql_wrapper
+def get_roles_data(**kwargs) -> List[Dict[AnyStr, Any]]:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
 
     # Prepare the SQL request that returns the list of roles.
-    statement = """
+    sql_statement = """
     select
-        role_id,
-        role_technical_name,
-        role_public_name,
-        role_description
+        role_id::text,
+        role_technical_name::text,
+        role_public_name::text,
+        role_description::text
     from
         roles;
     """
 
-    # Execute a previously prepared SQL query.
+    # Execute the SQL query dynamically, in a convenient and safe way.
     try:
-        cursor.execute(statement)
+        cursor.execute(sql_statement)
     except Exception as error:
         logger.error(error)
-        sys.exit(1)
+        raise Exception(error)
 
-    # After the successful execution of the query commit your changes to the database.
-    postgresql_connection.commit()
+    # Return the list of roles.
+    return cursor.fetchall()
 
-    # Fetch the next row of a query result set.
-    roles_entries = cursor.fetchall()
 
-    # The cursor will be unusable from this point forward.
-    cursor.close()
+def analyze_and_format_roles_data(**kwargs) -> Any:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        roles_data = kwargs["roles_data"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
 
-    # Analyze the data about roles received from the database.
-    roles = list()
-    if roles_entries is not None:
-        for entry in roles_entries:
-            role = dict()
-            for key, value in entry.items():
-                if "_id" in key and value is not None:
-                    value = str(value)
+    # Format the roles data.
+    roles = []
+    if roles_data is not None:
+        for record in roles_data:
+            role = {}
+            for key, value in record.items():
                 role[utils.camel_case(key)] = value
             roles.append(role)
+
+    # Return the roles.
+    return roles
+
+
+def lambda_handler(event, context):
+    # Define the instances of the database connections.
+    postgresql_connection = reuse_or_recreate_postgresql_connection()
+
+    # Get the list of roles.
+    roles_data = get_roles_data(postgresql_connection=postgresql_connection)
+
+    # Define variable that stores formatted information.
+    roles = analyze_and_format_roles_data(roles_data=roles_data)
 
     # Return the list of roles as the response.
     return roles

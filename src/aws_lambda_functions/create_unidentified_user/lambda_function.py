@@ -300,7 +300,7 @@ def lambda_handler(event, context):
         }
     )
 
-    # Define variables that stores formatted information about unidentified user.
+    # Define variable that stores formatted information about unidentified user.
     unidentified_user = analyze_and_format_unidentified_user_data(unidentified_user_data=unidentified_user_data)
 
     # Return the information of the new created unidentified user.

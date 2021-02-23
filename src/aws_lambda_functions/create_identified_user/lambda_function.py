@@ -356,7 +356,7 @@ def lambda_handler(event, context):
         }
     )
 
-    # Define variables that stores formatted information about identified user.
+    # Define variable that stores formatted information about identified user.
     identified_user = analyze_and_format_identified_user_data(identified_user_data=identified_user_data)
 
     # Return the information of the new created identified user.
