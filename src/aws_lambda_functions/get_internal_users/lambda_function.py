@@ -250,7 +250,7 @@ def analyze_and_format_internal_users_data(**kwargs) -> Any:
             internal_user["organization"] = organization
             internal_users.append(internal_user)
             if index == 0:
-                total_items_count = record["total_number_of_users"]
+                total_items_count = record["total_items_count"]
 
     # Return the internal users and the total count of items.
     return internal_users, total_items_count

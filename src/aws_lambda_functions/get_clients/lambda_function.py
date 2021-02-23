@@ -307,7 +307,7 @@ def analyze_and_format_clients_data(**kwargs) -> Any:
             client["gender"] = gender
             clients.append(client)
             if index == 0:
-                total_items_count = record["total_number_of_users"]
+                total_items_count = record["total_items_count"]
 
     # Return the clients and the total count of items.
     return clients, total_items_count
