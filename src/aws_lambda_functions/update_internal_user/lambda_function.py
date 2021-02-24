@@ -109,7 +109,7 @@ def check_input_arguments(**kwargs) -> None:
         if argument_name in modified_arguments:
             formatted_arguments["internal_{0}".format(utils.snake_case(argument_name))] = input_arguments[argument_name]
         else:
-            formatted_arguments[utils.camel_case(argument_name)] = input_arguments[argument_name]
+            formatted_arguments[utils.snake_case(argument_name)] = input_arguments[argument_name]
 
     # Put the result of the function in the queue.
     queue.put({
