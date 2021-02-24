@@ -156,7 +156,7 @@ def postgresql_wrapper(function):
 
 def get_access_token_from_auth0() -> AnyStr:
     # Create the request URL address.
-    request_url = "{0}/oauth/token".format(AUTH0_DOMAIN)
+    request_url = "{0}oauth/token".format(AUTH0_DOMAIN)
 
     # Define the headers.
     headers = {
@@ -167,7 +167,7 @@ def get_access_token_from_auth0() -> AnyStr:
     data = {
         "client_id": AUTH0_CLIENT_ID,
         "client_secret": AUTH0_CLIENT_SECRET,
-        "audience": "{0}/api/v2/".format(AUTH0_DOMAIN),
+        "audience": "{0}api/v2/".format(AUTH0_DOMAIN),
         "grant_type": "client_credentials"
     }
 
@@ -202,7 +202,7 @@ def change_user_password_in_auth0(**kwargs) -> None:
         raise Exception(error)
 
     # Create the request URL address.
-    request_url = "{0}/api/v2/users/{1}".format(AUTH0_DOMAIN, auth0_user_id)
+    request_url = "{0}api/v2/users/{1}".format(AUTH0_DOMAIN, auth0_user_id)
 
     # Define the headers.
     headers = {
