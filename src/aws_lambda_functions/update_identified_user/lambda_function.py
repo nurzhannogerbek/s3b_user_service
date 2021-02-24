@@ -1,38 +1,128 @@
+import logging
+import os
+import uuid
+from psycopg2.extras import RealDictCursor
+from psycopg2 import sql
+from functools import wraps
+from typing import *
+from threading import Thread
+from queue import Queue
 import databases
 import utils
-import logging
-import sys
-import os
-from psycopg2.extras import RealDictCursor
 
-"""
-Define the connection to the database outside of the "lambda_handler" function.
-The connection to the database will be created the first time the function is called.
-Any subsequent function call will use the same database connection.
-"""
-postgresql_connection = None
+# Configure the logging tool in the AWS Lambda function.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
-# Define databases settings parameters.
+# Initialize constants with parameters to configure.
 POSTGRESQL_USERNAME = os.environ["POSTGRESQL_USERNAME"]
 POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 POSTGRESQL_HOST = os.environ["POSTGRESQL_HOST"]
 POSTGRESQL_PORT = int(os.environ["POSTGRESQL_PORT"])
 POSTGRESQL_DB_NAME = os.environ["POSTGRESQL_DB_NAME"]
 
-logger = logging.getLogger(__name__)  # Create the logger with the specified name.
-logger.setLevel(logging.WARNING)  # Set the logging level of the logger.
+# The connection to the database will be created the first time the AWS Lambda function is called.
+# Any subsequent call to the function will use the same database connection until the container stops.
+POSTGRESQL_CONNECTION = None
 
 
-def lambda_handler(event, context):
-    """
-    :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
-    :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
-    """
-    # Since the connection with the database were defined outside of the function, we create global variables.
-    global postgresql_connection
-    if not postgresql_connection:
+def run_multithreading_tasks(functions: List[Dict[AnyStr, Union[Callable, Dict[AnyStr, Any]]]]) -> Dict[AnyStr, Any]:
+    # Create the empty list to save all parallel threads.
+    threads = []
+
+    # Create the queue to store all results of functions.
+    queue = Queue()
+
+    # Create the thread for each function.
+    for function in functions:
+        # Check whether the input arguments have keys in their dictionaries.
         try:
-            postgresql_connection = databases.create_postgresql_connection(
+            function_object = function["function_object"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+        try:
+            function_arguments = function["function_arguments"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+
+        # Add the instance of the queue to the list of function arguments.
+        function_arguments["queue"] = queue
+
+        # Create the thread.
+        thread = Thread(target=function_object, kwargs=function_arguments)
+        threads.append(thread)
+
+    # Start all parallel threads.
+    for thread in threads:
+        thread.start()
+
+    # Wait until all parallel threads are finished.
+    for thread in threads:
+        thread.join()
+
+    # Get the results of all threads.
+    results = {}
+    while not queue.empty():
+        results = {**results, **queue.get()}
+
+    # Return the results of all threads.
+    return results
+
+
+def check_input_arguments(**kwargs) -> None:
+    # Make sure that all the necessary arguments for the AWS Lambda function are present.
+    try:
+        input_arguments = kwargs["event"]["arguments"]["input"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        queue = kwargs["queue"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Check the format and values of required arguments in the list of input arguments.
+    required_arguments = ["userId"]
+    modified_arguments = [
+        "userFirstName",
+        "userLastName",
+        "userMiddleName",
+        "userPrimaryEmail",
+        "userSecondaryEmail",
+        "userPrimaryPhoneNumber",
+        "userSecondaryPhoneNumber"
+    ]
+    formatted_arguments = {}
+    for argument_name, argument_value in input_arguments.items():
+        if argument_name == "userId" and argument_name not in required_arguments:
+            raise Exception("The '{0}' argument doesn't exist.".format(argument_name))
+        if argument_name == "userId":
+            try:
+                uuid.UUID(argument_value)
+            except ValueError:
+                raise Exception("The '{0}' argument format is not UUID.".format(argument_name))
+        if argument_name in modified_arguments:
+            formatted_arguments["identified_{0}".format(utils.snake_case(argument_name))] = input_arguments[argument_name]
+        else:
+            formatted_arguments[utils.snake_case(argument_name)] = input_arguments[argument_name]
+
+    # Put the result of the function in the queue.
+    queue.put({
+        "input_arguments": formatted_arguments
+    })
+
+    # Return nothing.
+    return None
+
+
+def reuse_or_recreate_postgresql_connection(queue: Queue) -> None:
+    global POSTGRESQL_CONNECTION
+    if not POSTGRESQL_CONNECTION:
+        try:
+            POSTGRESQL_CONNECTION = databases.create_postgresql_connection(
                 POSTGRESQL_USERNAME,
                 POSTGRESQL_PASSWORD,
                 POSTGRESQL_HOST,
@@ -41,151 +131,153 @@ def lambda_handler(event, context):
             )
         except Exception as error:
             logger.error(error)
-            sys.exit(1)
+            raise Exception("Unable to connect to the PostgreSQL database.")
+    queue.put({"postgresql_connection": POSTGRESQL_CONNECTION})
+    return None
 
-    # Define the values of the data passed to the function.
-    user_id = event["arguments"]["input"]["userId"]
-    try:
-        identified_user_first_name = event["arguments"]["input"]["userFirstName"]
-    except KeyError:
-        identified_user_first_name = None
-    try:
-        identified_user_last_name = event["arguments"]["input"]["userLastName"]
-    except KeyError:
-        identified_user_last_name = None
-    try:
-        identified_user_middle_name = event["arguments"]["input"]["userMiddleName"]
-    except KeyError:
-        identified_user_middle_name = None
-    try:
-        identified_user_primary_email = event["arguments"]["input"]["userPrimaryEmail"]
-    except KeyError:
-        identified_user_primary_email = None
-    try:
-        identified_user_secondary_email = event["arguments"]["input"]["userSecondaryEmail"]
-    except KeyError:
-        identified_user_secondary_email = None
-    try:
-        identified_user_primary_phone_number = event["arguments"]["input"]["userPrimaryPhoneNumber"]
-    except KeyError:
-        identified_user_primary_phone_number = None
-    try:
-        identified_user_secondary_phone_number = event["arguments"]["input"]["userSecondaryPhoneNumber"]
-    except KeyError:
-        identified_user_secondary_phone_number = None
-    try:
-        identified_user_profile_photo_url = event["arguments"]["input"]["userProfilePhotoUrl"]
-    except KeyError:
-        identified_user_profile_photo_url = None
-    try:
-        gender_id = event["arguments"]["input"]["genderId"]
-    except KeyError:
-        gender_id = None
-    metadata = event["arguments"]["input"]["metadata"]
-    try:
-        telegram_username = event["arguments"]["input"]["telegramUsername"]
-    except KeyError:
-        telegram_username = None
-    try:
-        whatsapp_profile = event["arguments"]["input"]["whatsappProfile"]
-    except KeyError:
-        whatsapp_profile = None
-    try:
-        whatsapp_username = event["arguments"]["input"]["whatsappUsername"]
-    except KeyError:
-        whatsapp_username = None
 
-    # With a dictionary cursor, the data is sent in a form of Python dictionaries.
-    cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+def postgresql_wrapper(function):
+    @wraps(function)
+    def wrapper(**kwargs):
+        try:
+            postgresql_connection = kwargs["postgresql_connection"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+        cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+        kwargs["cursor"] = cursor
+        result = function(**kwargs)
+        cursor.close()
+        return result
+    return wrapper
 
-    # Prepare the SQL request that updates information of the specific identified user.
-    statement = """
+
+@postgresql_wrapper
+def update_user_profile_photo_url(**kwargs) -> None:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        sql_arguments = kwargs["sql_arguments"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Prepare the SQL request that updates the value of user's profile photo url.
+    sql_statement = """
     update
-        identified_users
+        users
     set
-        identified_user_first_name = {0},
-        identified_user_last_name = {1},
-        identified_user_middle_name = {2},
-        identified_user_primary_email = {3},
-        identified_user_secondary_email = {4},
-        identified_user_primary_phone_number = {5},
-        identified_user_secondary_phone_number = {6},
-        identified_user_profile_photo_url = {7},
-        gender_id = {8},
-        metadata = {9},
-        telegram_username = {10},
-        whatsapp_profile = {11},
-        whatsapp_username = {12}
+        user_profile_photo_url = %(user_profile_photo_url)s
     where
-        identified_user_id = (
-            select
-                identified_user_id
-            from
-                users
-            where
-                user_id = {13}
-            and
-                identified_user_id is not null
-            limit 1
-        );
-    """.format(
-        'null' if identified_user_first_name is None or len(identified_user_first_name) == 0
-        else "'{0}'".format(identified_user_first_name),
-        'null' if identified_user_last_name is None or len(identified_user_last_name) == 0
-        else "'{0}'".format(identified_user_last_name),
-        'null' if identified_user_middle_name is None or len(identified_user_middle_name) == 0
-        else "'{0}'".format(identified_user_middle_name),
-        'null' if identified_user_primary_email is None or len(identified_user_primary_email) == 0
-        else "'{0}'".format(identified_user_primary_email),
-        'null' if identified_user_secondary_email is None or len(identified_user_secondary_email) == 0
-        else "'{0}'".format(identified_user_secondary_email),
-        'null' if identified_user_primary_phone_number is None or len(identified_user_primary_phone_number) == 0
-        else "'{0}'".format(identified_user_primary_phone_number),
-        'null' if identified_user_secondary_phone_number is None or len(identified_user_secondary_phone_number) == 0
-        else "'{0}'".format(identified_user_secondary_phone_number),
-        'null' if identified_user_profile_photo_url is None or len(identified_user_profile_photo_url) == 0
-        else "'{0}'".format(identified_user_profile_photo_url),
-        'null' if gender_id is None or len(gender_id) == 0
-        else "'{0}'".format(gender_id),
-        "'{0}'".format(metadata.replace("'", "''")),
-        'null' if telegram_username is None or len(telegram_username) == 0
-        else "'{0}'".format(telegram_username),
-        'null' if whatsapp_profile is None or len(whatsapp_profile) == 0
-        else "'{0}'".format(whatsapp_profile),
-        'null' if whatsapp_username is None or len(whatsapp_username) == 0
-        else "'{0}'".format(whatsapp_username),
-        "'{0}'".format(user_id)
-    )
+        user_id = %(user_id)s;
+    """
 
-    # Execute a previously prepared SQL query.
+    # Execute the SQL query dynamically, in a convenient and safe way.
     try:
-        cursor.execute(statement)
+        cursor.execute(sql_statement, sql_arguments)
     except Exception as error:
         logger.error(error)
-        sys.exit(1)
+        raise Exception(error)
 
-    # After the successful execution of the query commit your changes to the database.
-    postgresql_connection.commit()
+    # Return nothing.
+    return None
 
-    # Prepare the SQL request that returns information of the user.
-    statement = """
+
+@postgresql_wrapper
+def update_identified_user(**kwargs) -> None:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        sql_arguments = kwargs["sql_arguments"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Generate SQL dynamically, in a convenient and safe way: "https://www.psycopg.org/docs/sql.html".
+    removed_arguments = ["user_id", "user_profile_photo_url"]
+    sql_statement_arguments = [argument for argument in list(sql_arguments.keys()) if argument not in removed_arguments]
+    if sql_statement_arguments:
+        sql_statement = sql.SQL("""
+        update
+            identified_users
+        set
+            {fields}
+        where
+            identified_user_id = (
+                select
+                    identified_user_id
+                from
+                    users
+                where
+                    user_id = {user_id}
+                and
+                    identified_user_id is not null
+                limit 1
+            );
+        """).format(
+            fields=sql.SQL(', ').join(
+                sql.Composed([
+                    sql.Identifier(argument_name),
+                    sql.SQL(" = "),
+                    sql.Placeholder(argument_name)
+                ]) for argument_name in sql_statement_arguments
+            ),
+            user_id=sql.Placeholder("user_id")
+        )
+
+        # Execute the SQL query dynamically, in a convenient and safe way.
+        try:
+            cursor.execute(sql_statement, sql_arguments)
+        except Exception as error:
+            logger.error(error)
+            raise Exception(error)
+
+    # Return nothing.
+    return None
+
+
+@postgresql_wrapper
+def get_identified_user_data(**kwargs) -> Any:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        sql_arguments = kwargs["sql_arguments"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Prepare the SQL request that return information about new created identified user.
+    sql_statement = """
     select
-        users.user_id,
-        identified_users.identified_user_first_name as user_first_name,
-        identified_users.identified_user_last_name as user_last_name,
-        identified_users.identified_user_middle_name as user_middle_name,
-        identified_users.identified_user_primary_email as user_primary_email,
-        identified_users.identified_user_secondary_email as user_secondary_email,
-        identified_users.identified_user_primary_phone_number as user_primary_phone_number,
-        identified_users.identified_user_secondary_phone_number as user_secondary_phone_number,
-        identified_users.identified_user_profile_photo_url as user_profile_photo_url,
-        genders.gender_id,
-        genders.gender_technical_name,
-        genders.gender_public_name,
+        users.user_id::text,
+        users.user_nickname::text,
+        users.user_profile_photo_url::text,
+        identified_users.identified_user_first_name::text as user_first_name,
+        identified_users.identified_user_last_name::text as user_last_name,
+        identified_users.identified_user_middle_name::text as user_middle_name,
+        identified_users.identified_user_primary_email::text as user_primary_email,
+        identified_users.identified_user_secondary_email::text[] as user_secondary_email,
+        identified_users.identified_user_primary_phone_number::text as user_primary_phone_number,
+        identified_users.identified_user_secondary_phone_number::text[] as user_secondary_phone_number,
+        genders.gender_id::text,
+        genders.gender_technical_name::text,
+        genders.gender_public_name::text,
         identified_users.metadata::text,
-        identified_users.telegram_username,
-        identified_users.whatsapp_profile,
-        identified_users.whatsapp_username
+        identified_users.telegram_username::text,
+        identified_users.whatsapp_profile::text,
+        identified_users.whatsapp_username::text
     from
         users
     left join identified_users on
@@ -193,35 +285,94 @@ def lambda_handler(event, context):
     left join genders on
         identified_users.gender_id = genders.gender_id
     where
-        users.user_id = '{0}'
+        users.user_id = %(user_id)s
     limit 1;
-    """.format(user_id)
+    """
 
-    # Execute a previously prepared SQL query.
+    # Execute the SQL query dynamically, in a convenient and safe way.
     try:
-        cursor.execute(statement)
+        cursor.execute(sql_statement, sql_arguments)
     except Exception as error:
         logger.error(error)
-        sys.exit(1)
+        raise Exception(error)
 
-    # Fetch the next row of a query result set.
-    identified_user_entry = cursor.fetchone()
+    # Return the information of the new created identified user.
+    return cursor.fetchone()
 
-    # The cursor will be unusable from this point forward.
-    cursor.close()
 
-    # Analyze the data about identified user received from the database.
-    identified_user = dict()
-    if identified_user_entry is not None:
-        gender = dict()
-        for key, value in identified_user_entry.items():
-            if "_id" in key and value is not None:
-                value = str(value)
-            if "gender_" in key:
+def analyze_and_format_identified_user_data(**kwargs) -> Any:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        identified_user_data = kwargs["identified_user_data"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Format the identified user data.
+    identified_user = {}
+    if identified_user_data:
+        gender = {}
+        for key, value in identified_user_data.items():
+            if key.startswith("gender_"):
                 gender[utils.camel_case(key)] = value
             else:
                 identified_user[utils.camel_case(key)] = value
         identified_user["gender"] = gender
 
-    # Return the full information of the new created user as the response.
+    # Return the information of the new created identified user.
+    return identified_user
+
+
+def lambda_handler(event, context):
+    """
+    :param event: The AWS Lambda function uses this parameter to pass in event data to the handler.
+    :param context: The AWS Lambda function uses this parameter to provide runtime information to your handler.
+    """
+    # Run several initialization functions in parallel.
+    results_of_tasks = run_multithreading_tasks([
+        {
+            "function_object": check_input_arguments,
+            "function_arguments": {
+                "event": event
+            }
+        },
+        {
+            "function_object": reuse_or_recreate_postgresql_connection,
+            "function_arguments": {}
+        }
+    ])
+
+    # Define the input arguments of the AWS Lambda function.
+    input_arguments = results_of_tasks["input_arguments"]
+    user_id = input_arguments["user_id"]
+    user_profile_photo_url = input_arguments.get("user_profile_photo_url", None)
+
+    # Define the instances of the database connections.
+    postgresql_connection = results_of_tasks["postgresql_connection"]
+
+    # Change the user's profile photo url.
+    if user_profile_photo_url:
+        update_user_profile_photo_url(
+            postgresql_connection=postgresql_connection,
+            sql_arguments={
+                "user_id": user_id,
+                "user_profile_photo_url": user_profile_photo_url
+            }
+        )
+
+    # Update identified user's main information.
+    update_identified_user(postgresql_connection=postgresql_connection, sql_arguments=input_arguments)
+
+    # Get information of the identified user.
+    identified_user_data = get_identified_user_data(
+        postgresql_connection=postgresql_connection,
+        sql_arguments={
+            "user_id": user_id
+        }
+    )
+
+    # Define variable that stores formatted information about identified user.
+    identified_user = analyze_and_format_identified_user_data(identified_user_data=identified_user_data)
+
+    # Return the information of the identified user.
     return identified_user
