@@ -86,8 +86,10 @@ def check_input_arguments(**kwargs) -> None:
     # Check the format and values of required arguments in the list of input arguments.
     required_arguments = ["metadata"]
     for argument_name, argument_value in input_arguments.items():
-        if argument_name not in required_arguments:
+        if argument_name == "metadata" and argument_name not in required_arguments:
             raise Exception("The '{0}' argument doesn't exist.".format(argument_name))
+        if argument_name == "metadata" and argument_value is None:
+            raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
 
     # Put the result of the function in the queue.
     queue.put({
