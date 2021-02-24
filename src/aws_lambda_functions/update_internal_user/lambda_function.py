@@ -100,19 +100,20 @@ def check_input_arguments(**kwargs) -> None:
         "userSecondaryPhoneNumber",
         "userPositionName"
     ]
+    formatted_arguments = {}
     for argument_name, argument_value in input_arguments.items():
         if argument_name == "auth0UserId" and argument_name not in required_arguments:
             raise Exception("The '{0}' argument doesn't exist.".format(argument_name))
         if argument_name == "auth0UserId" and argument_value is None:
             raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
         if argument_name in modified_arguments:
-            input_arguments["internal_{0}".format(utils.snake_case(argument_name))] = input_arguments.pop(argument_name)
+            formatted_arguments["internal_{0}".format(utils.snake_case(argument_name))] = input_arguments[argument_name]
         else:
-            input_arguments[utils.camel_case(argument_name)] = input_arguments.pop(argument_name)
+            formatted_arguments[utils.camel_case(argument_name)] = input_arguments[argument_name]
 
     # Put the result of the function in the queue.
     queue.put({
-        "input_arguments": input_arguments
+        "input_arguments": formatted_arguments
     })
 
     # Return nothing.
