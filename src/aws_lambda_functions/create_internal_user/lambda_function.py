@@ -137,7 +137,7 @@ def reuse_or_recreate_postgresql_connection(queue: Queue) -> None:
 
 
 def get_access_token_from_auth0(**kwargs) -> None:
-    # Make sure that all the necessary arguments for the AWS Lambda function are present.
+    # Check if the input dictionary has all the necessary keys.
     try:
         queue = kwargs["queue"]
     except KeyError as error:
@@ -178,7 +178,7 @@ def get_access_token_from_auth0(**kwargs) -> None:
 
 
 def create_user_in_auth0(**kwargs) -> Any:
-    # Make sure that all the necessary arguments for the AWS Lambda function are present.
+    # Check if the input dictionary has all the necessary keys.
     try:
         access_token = kwargs["access_token"]
     except KeyError as error:
@@ -255,7 +255,6 @@ def postgresql_wrapper(function):
         result = function(**kwargs)
         cursor.close()
         return result
-
     return wrapper
 
 
