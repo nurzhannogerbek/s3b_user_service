@@ -1,38 +1,119 @@
+import logging
+import os
+import json
+import uuid
+from psycopg2.extras import RealDictCursor
+from functools import wraps
+from typing import *
+from threading import Thread
+from queue import Queue
 import databases
 import utils
-import logging
-import sys
-import os
-from psycopg2.extras import RealDictCursor
 
-"""
-Define the connection to the database outside of the "lambda_handler" function.
-The connection to the database will be created the first time the function is called.
-Any subsequent function call will use the same database connection.
-"""
-postgresql_connection = None
+# Configure the logging tool in the AWS Lambda function.
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
-# Define databases settings parameters.
+# Initialize constants with parameters to configure.
 POSTGRESQL_USERNAME = os.environ["POSTGRESQL_USERNAME"]
 POSTGRESQL_PASSWORD = os.environ["POSTGRESQL_PASSWORD"]
 POSTGRESQL_HOST = os.environ["POSTGRESQL_HOST"]
 POSTGRESQL_PORT = int(os.environ["POSTGRESQL_PORT"])
 POSTGRESQL_DB_NAME = os.environ["POSTGRESQL_DB_NAME"]
 
-logger = logging.getLogger(__name__)  # Create the logger with the specified name.
-logger.setLevel(logging.WARNING)  # Set the logging level of the logger.
+# The connection to the database will be created the first time the AWS Lambda function is called.
+# Any subsequent call to the function will use the same database connection until the container stops.
+POSTGRESQL_CONNECTION = None
 
 
-def lambda_handler(event, context):
-    """
-    :argument event: The AWS Lambda uses this parameter to pass in event data to the handler.
-    :argument context: The AWS Lambda uses this parameter to provide runtime information to your handler.
-    """
-    # Since the connection with the database were defined outside of the function, we create global variable.
-    global postgresql_connection
-    if not postgresql_connection:
+def run_multithreading_tasks(functions: List[Dict[AnyStr, Union[Callable, Dict[AnyStr, Any]]]]) -> Dict[AnyStr, Any]:
+    # Create the empty list to save all parallel threads.
+    threads = []
+
+    # Create the queue to store all results of functions.
+    queue = Queue()
+
+    # Create the thread for each function.
+    for function in functions:
+        # Check whether the input arguments have keys in their dictionaries.
         try:
-            postgresql_connection = databases.create_postgresql_connection(
+            function_object = function["function_object"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+        try:
+            function_arguments = function["function_arguments"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+
+        # Add the instance of the queue to the list of function arguments.
+        function_arguments["queue"] = queue
+
+        # Create the thread.
+        thread = Thread(target=function_object, kwargs=function_arguments)
+        threads.append(thread)
+
+    # Start all parallel threads.
+    for thread in threads:
+        thread.start()
+
+    # Wait until all parallel threads are finished.
+    for thread in threads:
+        thread.join()
+
+    # Get the results of all threads.
+    results = {}
+    while not queue.empty():
+        results = {**results, **queue.get()}
+
+    # Return the results of all threads.
+    return results
+
+
+def check_input_arguments(**kwargs) -> None:
+    # Make sure that all the necessary arguments for the AWS Lambda function are present.
+    try:
+        input_arguments = kwargs["event"]["arguments"]["input"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        queue = kwargs["queue"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Check the format and values of required arguments in the list of input arguments.
+    required_arguments = ["userId", "metadata"]
+    for argument_name, argument_value in input_arguments.items():
+        if argument_name not in required_arguments:
+            raise Exception("The '{0}' argument doesn't exist.".format(argument_name))
+        if argument_value is None:
+            raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
+        if argument_name == "userId":
+            try:
+                uuid.UUID(argument_value)
+            except ValueError:
+                raise Exception("The '{0}' argument format is not UUID.".format(argument_name))
+
+    # Put the result of the function in the queue.
+    queue.put({
+        "input_arguments": {
+            "user_id": input_arguments["user_id"],
+            "metadata": json.dumps(input_arguments["metadata"])
+        }
+    })
+
+    # Return nothing.
+    return None
+
+
+def reuse_or_recreate_postgresql_connection(queue: Queue) -> None:
+    global POSTGRESQL_CONNECTION
+    if not POSTGRESQL_CONNECTION:
+        try:
+            POSTGRESQL_CONNECTION = databases.create_postgresql_connection(
                 POSTGRESQL_USERNAME,
                 POSTGRESQL_PASSWORD,
                 POSTGRESQL_HOST,
@@ -41,21 +122,47 @@ def lambda_handler(event, context):
             )
         except Exception as error:
             logger.error(error)
-            sys.exit(1)
+            raise Exception("Unable to connect to the PostgreSQL database.")
+    queue.put({"postgresql_connection": POSTGRESQL_CONNECTION})
+    return None
 
-    # Define the values of the data passed to the function.
-    user_id = event["arguments"]["input"]["userId"]
-    metadata = event["arguments"]["input"]["metadata"]
 
-    # With a dictionary cursor, the data is sent in a form of Python dictionaries.
-    cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+def postgresql_wrapper(function):
+    @wraps(function)
+    def wrapper(**kwargs):
+        try:
+            postgresql_connection = kwargs["postgresql_connection"]
+        except KeyError as error:
+            logger.error(error)
+            raise Exception(error)
+        cursor = postgresql_connection.cursor(cursor_factory=RealDictCursor)
+        kwargs["cursor"] = cursor
+        result = function(**kwargs)
+        cursor.close()
+        return result
+    return wrapper
 
-    # Prepare the SQL request that updates information of the specific unidentified user.
-    statement = """
+
+@postgresql_wrapper
+def update_unidentified_user(**kwargs) -> None:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        sql_arguments = kwargs["sql_arguments"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Prepare the SQL request that updates information of the unidentified user.
+    sql_statement = """
     update
         unidentified_users
     set
-        metadata = {0}
+        metadata = %(metadata)s
     where
         unidentified_user_id = (
             select
@@ -63,60 +170,124 @@ def lambda_handler(event, context):
             from
                 users
             where
-                user_id = {1}
+                user_id = %(user_id)s
             and
                 unidentified_user_id is not null
             limit 1
         );
-    """.format(
-        "'{0}'".format(metadata.replace("'", "''")),
-        "'{0}'".format(user_id)
-    )
+    """
 
-    # Execute a previously prepared SQL query.
+    # Execute the SQL query dynamically, in a convenient and safe way.
     try:
-        cursor.execute(statement)
+        cursor.execute(sql_statement, sql_arguments)
     except Exception as error:
         logger.error(error)
-        sys.exit(1)
+        raise Exception(error)
 
-    # After the successful execution of the query commit your changes to the database.
-    postgresql_connection.commit()
+    # Return nothing.
+    return None
 
-    # Prepare the SQL request that returns information about new created unidentified user.
-    statement = """
+
+@postgresql_wrapper
+def get_unidentified_user_data(**kwargs) -> Any:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        cursor = kwargs["cursor"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+    try:
+        sql_arguments = kwargs["sql_arguments"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Prepare the SQL request that return information about new created unidentified user.
+    sql_statement = """
     select
-        users.user_id,
+        users.user_id::text,
+        users.user_nickname::text,
+        users.user_profile_photo_url::text,
         unidentified_users.metadata::text
     from
         users
     left join unidentified_users on
         users.unidentified_user_id = unidentified_users.unidentified_user_id
     where
-        users.user_id = '{0}'
+        users.user_id = %(user_id)s
     limit 1;
-    """.format(user_id)
+    """
 
-    # Execute a previously prepared SQL query.
+    # Execute the SQL query dynamically, in a convenient and safe way.
     try:
-        cursor.execute(statement)
+        cursor.execute(sql_statement, sql_arguments)
     except Exception as error:
         logger.error(error)
-        sys.exit(1)
+        raise Exception(error)
 
-    # Fetch the next row of a query result set.
-    unidentified_user_entry = cursor.fetchone()
+    # Return the information of the new created unidentified user.
+    return cursor.fetchone()
 
-    # The cursor will be unusable from this point forward.
-    cursor.close()
 
-    # Analyze the data about unidentified user received from the database.
-    unidentified_user = dict()
-    if unidentified_user_entry is not None:
-        for key, value in unidentified_user_entry.items():
-            if "_id" in key and value is not None:
-                value = str(value)
+def analyze_and_format_unidentified_user_data(**kwargs) -> Any:
+    # Check if the input dictionary has all the necessary keys.
+    try:
+        unidentified_user_data = kwargs["unidentified_user_data"]
+    except KeyError as error:
+        logger.error(error)
+        raise Exception(error)
+
+    # Format the unidentified user data.
+    unidentified_user = {}
+    if unidentified_user_data:
+        for key, value in unidentified_user_data.items():
             unidentified_user[utils.camel_case(key)] = value
 
-    # Return the full information of the new created user as the response.
+    # Return the information of the new created unidentified user.
+    return unidentified_user
+
+
+def lambda_handler(event, context):
+    """
+    :param event: The AWS Lambda function uses this parameter to pass in event data to the handler.
+    :param context: The AWS Lambda function uses this parameter to provide runtime information to your handler.
+    """
+    # Run several initialization functions in parallel.
+    results_of_tasks = run_multithreading_tasks([
+        {
+            "function_object": check_input_arguments,
+            "function_arguments": {
+                "event": event
+            }
+        },
+        {
+            "function_object": reuse_or_recreate_postgresql_connection,
+            "function_arguments": {}
+        }
+    ])
+
+    # Define the input arguments of the AWS Lambda function.
+    input_arguments = results_of_tasks["input_arguments"]
+
+    # Define the instances of the database connections.
+    postgresql_connection = results_of_tasks["postgresql_connection"]
+
+    # Update information of the unidentified user.
+    update_unidentified_user(
+        postgresql_connection=postgresql_connection,
+        sql_arguments=input_arguments
+    )
+
+    # Get information of the unidentified user.
+    unidentified_user_data = get_unidentified_user_data(
+        postgresql_connection=postgresql_connection,
+        sql_arguments={
+            "user_id": input_arguments["user_id"]
+        }
+    )
+
+    # Define variable that stores formatted information about unidentified user.
+    unidentified_user = analyze_and_format_unidentified_user_data(unidentified_user_data=unidentified_user_data)
+
+    # Return the information of the unidentified user.
     return unidentified_user
