@@ -327,7 +327,7 @@ def lambda_handler(event, context):
     aggregated_data = get_aggregated_data(
         postgresql_connection=postgresql_connection,
         sql_arguments={
-            "users_ids": users_ids
+            "users_ids": tuple(users_ids)
         }
     )
 
@@ -342,7 +342,7 @@ def lambda_handler(event, context):
             "function_arguments": {
                 "postgresql_connection": postgresql_connection,
                 "sql_arguments": {
-                    "identified_users_ids": identified_users_ids
+                    "identified_users_ids": tuple(identified_users_ids)
                 }
             }
         },
@@ -351,7 +351,7 @@ def lambda_handler(event, context):
             "function_arguments": {
                 "postgresql_connection": postgresql_connection,
                 "sql_arguments": {
-                    "unidentified_users_ids": unidentified_users_ids
+                    "unidentified_users_ids": tuple(unidentified_users_ids)
                 }
             }
         },
@@ -360,7 +360,7 @@ def lambda_handler(event, context):
             "function_arguments": {
                 "postgresql_connection": postgresql_connection,
                 "sql_arguments": {
-                    "users_ids": users_ids
+                    "users_ids": tuple(users_ids)
                 }
             }
         }
