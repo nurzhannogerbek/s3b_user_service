@@ -9,6 +9,7 @@ from queue import Queue
 import databases
 import utils
 import requests
+import re
 
 # Configure the logging tool in the AWS Lambda function.
 logger = logging.getLogger(__name__)
@@ -98,6 +99,22 @@ def check_input_arguments(**kwargs) -> None:
             raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
         elif argument_name == "password" and argument_value is None:
             raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
+
+    # Validation primary and secondary phone numbers.
+    if not input_arguments.get("userPrimaryPhoneNumber", None):
+        input_arguments["userPrimaryPhoneNumber"] = re.sub(
+            "[^0-9+]",
+            "",
+            input_arguments["userPrimaryPhoneNumber"]
+        )
+    if not input_arguments.get("userSecondaryPhoneNumber", None):
+        input_arguments["userSecondaryPhoneNumber"] = [
+            re.sub(
+                "[^0-9+]",
+                "",
+                phone_number
+            ) for phone_number in input_arguments["userSecondaryPhoneNumber"]
+        ]
 
     # Put the result of the function in the queue.
     queue.put({

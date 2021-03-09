@@ -10,6 +10,7 @@ from queue import Queue
 import databases
 import utils
 import requests
+import re
 
 # Configure the logging tool in the AWS Lambda function.
 logger = logging.getLogger(__name__)
@@ -110,6 +111,22 @@ def check_input_arguments(**kwargs) -> None:
             formatted_arguments["internal_{0}".format(utils.snake_case(argument_name))] = input_arguments[argument_name]
         else:
             formatted_arguments[utils.snake_case(argument_name)] = input_arguments[argument_name]
+
+    # Validation primary and secondary phone numbers.
+    if not formatted_arguments.get("internal_user_primary_phone_number", None):
+        formatted_arguments["internal_user_primary_phone_number"] = re.sub(
+            "[^0-9+]",
+            "",
+            formatted_arguments["internal_user_primary_phone_number"]
+        )
+    if not formatted_arguments.get("internal_user_secondary_phone_number", None):
+        formatted_arguments["internal_user_secondary_phone_number"] = [
+            re.sub(
+                "[^0-9+]",
+                "",
+                phone_number
+            ) for phone_number in formatted_arguments["internal_user_secondary_phone_number"]
+        ]
 
     # Put the result of the function in the queue.
     queue.put({
