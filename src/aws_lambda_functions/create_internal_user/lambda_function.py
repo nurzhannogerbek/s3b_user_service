@@ -512,7 +512,7 @@ def lambda_handler(event, context):
             password=password
         )
         # Change the value of the auth0 fields.
-        input_arguments["auth0_metadata"] = auth0_metadata
+        input_arguments["auth0_metadata"] = json.dumps(auth0_metadata)
         input_arguments["auth0_user_id"] = auth0_metadata["user_id"]
 
     # Create the new internal user.
