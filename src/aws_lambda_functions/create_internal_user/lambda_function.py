@@ -502,16 +502,18 @@ def lambda_handler(event, context):
     access_token = results_of_tasks["access_token"]
 
     # Check the value of the user id in the Auth0.
-    if auth0_user_id:
+    if not auth0_user_id:
         # Create the new user in the Auth0.
-        input_arguments["auth0_metadata"] = create_user_in_auth0(
+        auth0_metadata = create_user_in_auth0(
             access_token=access_token,
             internal_user_first_name=internal_user_first_name,
             internal_user_last_name=internal_user_last_name,
             internal_user_primary_email=internal_user_primary_email,
             password=password
         )
-        input_arguments["auth0_user_id"] = input_arguments["auth0_metadata"]
+        # Change the value of the
+        input_arguments["auth0_metadata"] = auth0_metadata
+        input_arguments["auth0_user_id"] = auth0_metadata["user_id"]
 
     # Create the new internal user.
     user_id = create_internal_user(postgresql_connection=postgresql_connection, sql_arguments=input_arguments)
