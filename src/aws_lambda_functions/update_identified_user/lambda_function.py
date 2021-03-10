@@ -111,19 +111,19 @@ def check_input_arguments(**kwargs) -> None:
             formatted_arguments[utils.snake_case(argument_name)] = input_arguments[argument_name]
 
     # Validation primary and secondary phone numbers.
-    if not formatted_arguments.get("internal_user_primary_phone_number", None):
-        formatted_arguments["internal_user_primary_phone_number"] = re.sub(
+    if not formatted_arguments.get("identified_user_primary_phone_number", None):
+        formatted_arguments["identified_user_primary_phone_number"] = re.sub(
             "[^0-9+]",
             "",
-            formatted_arguments["internal_user_primary_phone_number"]
+            formatted_arguments["identified_user_primary_phone_number"]
         )
-    if not formatted_arguments.get("internal_user_secondary_phone_number", None):
-        formatted_arguments["internal_user_secondary_phone_number"] = [
+    if not formatted_arguments.get("identified_user_secondary_phone_number", None):
+        formatted_arguments["identified_user_secondary_phone_number"] = [
             re.sub(
                 "[^0-9+]",
                 "",
                 phone_number
-            ) for phone_number in formatted_arguments["internal_user_secondary_phone_number"]
+            ) for phone_number in formatted_arguments["identified_user_secondary_phone_number"]
         ]
 
     # Put the result of the function in the queue.
