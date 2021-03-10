@@ -113,13 +113,13 @@ def check_input_arguments(**kwargs) -> None:
             formatted_arguments[utils.snake_case(argument_name)] = input_arguments[argument_name]
 
     # Validation primary and secondary phone numbers.
-    if not formatted_arguments.get("internal_user_primary_phone_number", None):
+    if formatted_arguments.get("internal_user_primary_phone_number", None) is not None:
         formatted_arguments["internal_user_primary_phone_number"] = re.sub(
             "[^0-9+]",
             "",
             formatted_arguments["internal_user_primary_phone_number"]
         )
-    if not formatted_arguments.get("internal_user_secondary_phone_number", None):
+    if formatted_arguments.get("internal_user_secondary_phone_number", None) is not None:
         formatted_arguments["internal_user_secondary_phone_number"] = [
             re.sub(
                 "[^0-9+]",

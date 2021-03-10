@@ -93,13 +93,13 @@ def check_input_arguments(**kwargs) -> None:
             raise Exception("The '{0}' argument can't be None/Null/Undefined.".format(argument_name))
 
     # Validation primary and secondary phone numbers.
-    if not input_arguments.get("userPrimaryPhoneNumber", None):
+    if input_arguments.get("userPrimaryPhoneNumber", None) is not None:
         input_arguments["userPrimaryPhoneNumber"] = re.sub(
             "[^0-9+]",
             "",
             input_arguments["userPrimaryPhoneNumber"]
         )
-    if not input_arguments.get("userSecondaryPhoneNumber", None):
+    if input_arguments.get("userSecondaryPhoneNumber", None) is not None:
         input_arguments["userSecondaryPhoneNumber"] = [
             re.sub(
                 "[^0-9+]",
