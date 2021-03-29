@@ -123,7 +123,8 @@ def check_input_arguments(**kwargs) -> None:
             "metadata": json.dumps(input_arguments["metadata"]),
             "telegram_username": input_arguments.get("telegramUsername", None),
             "whatsapp_profile": input_arguments.get("whatsappProfile", None),
-            "whatsapp_username": input_arguments.get("whatsappUsername", None)
+            "whatsapp_username": input_arguments.get("whatsappUsername", None),
+            "instagram_private_username": input_arguments.get("instagramPrivateUsername", None)
         }
     })
 
@@ -193,7 +194,8 @@ def create_identified_user(**kwargs) -> AnyStr:
         metadata,
         telegram_username,
         whatsapp_profile,
-        whatsapp_username
+        whatsapp_username,
+        instagram_private_username
     ) values (
         %(identified_user_first_name)s,
         %(identified_user_last_name)s,
@@ -206,7 +208,8 @@ def create_identified_user(**kwargs) -> AnyStr:
         %(metadata)s,
         %(telegram_username)s,
         %(whatsapp_profile)s,
-        %(whatsapp_username)s
+        %(whatsapp_username)s,
+        %(instagram_private_username)s
     ) returning
         identified_user_id::text;
     """
@@ -291,7 +294,8 @@ def get_identified_user_data(**kwargs) -> Any:
         identified_users.metadata::text,
         identified_users.telegram_username::text,
         identified_users.whatsapp_profile::text,
-        identified_users.whatsapp_username::text
+        identified_users.whatsapp_username::text,
+        identified_users.instagram_private_username::text
     from
         users
     left join identified_users on
