@@ -115,7 +115,8 @@ def check_input_arguments(**kwargs) -> None:
             "metadata": json.dumps(input_arguments["metadata"]),
             "telegram_username": input_arguments.get("telegramUsername", None),
             "whatsapp_profile": input_arguments.get("whatsappProfile", None),
-            "whatsapp_username": input_arguments.get("whatsappUsername", None)
+            "whatsapp_username": input_arguments.get("whatsappUsername", None),
+            "instagram_private_username": input_arguments.get("instagramPrivateUsername", None)
         }
     })
 
@@ -185,7 +186,8 @@ def requalify_client(**kwargs) -> None:
         metadata,
         telegram_username,
         whatsapp_profile,
-        whatsapp_username
+        whatsapp_username,
+        instagram_private_username
     ) values (
         %(identified_user_first_name)s,
         %(identified_user_last_name)s,
@@ -198,7 +200,8 @@ def requalify_client(**kwargs) -> None:
         %(metadata)s,
         %(telegram_username)s,
         %(whatsapp_profile)s,
-        %(whatsapp_username)s
+        %(whatsapp_username)s,
+        %(instagram_private_username)s
     ) returning
         identified_user_id::text;
     """
@@ -361,6 +364,11 @@ def get_client_data(**kwargs) -> Any:
             and users.unidentified_user_id is null then identified_users.whatsapp_username::text
             else null
         end as whatsapp_username,
+        case
+            when users.identified_user_id is not null
+            and users.unidentified_user_id is null then identified_users.instagram_private_username::text
+            else null
+        end as instagram_private_username,
         genders.gender_id::text,
         genders.gender_technical_name::text,
         genders.gender_public_name::text

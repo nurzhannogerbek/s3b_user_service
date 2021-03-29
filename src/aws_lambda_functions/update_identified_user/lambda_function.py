@@ -294,7 +294,8 @@ def get_identified_user_data(**kwargs) -> Any:
         identified_users.metadata::text,
         identified_users.telegram_username::text,
         identified_users.whatsapp_profile::text,
-        identified_users.whatsapp_username::text
+        identified_users.whatsapp_username::text,
+        identified_users.instagram_private_username::text
     from
         users
     left join identified_users on
