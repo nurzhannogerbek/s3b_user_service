@@ -233,6 +233,11 @@ def get_clients_data(**kwargs) -> List[Dict[AnyStr, Any]]:
                 then identified_users.instagram_private_username::text
                 else null
             end as instagram_private_username,
+            case
+                when users.identified_user_id is not null and users.unidentified_user_id is null
+                then identified_users.vk_user_id::text
+                else null
+            end as vk_user_id,
             genders.gender_id::text,
             genders.gender_technical_name::text,
             genders.gender_public_name::text
