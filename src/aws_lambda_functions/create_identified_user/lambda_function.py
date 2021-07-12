@@ -125,7 +125,8 @@ def check_input_arguments(**kwargs) -> None:
             "whatsapp_profile": input_arguments.get("whatsappProfile", None),
             "whatsapp_username": input_arguments.get("whatsappUsername", None),
             "instagram_private_username": input_arguments.get("instagramPrivateUsername", None),
-            "vk_user_id": input_arguments.get("vkUserId", None)
+            "vk_user_id": input_arguments.get("vkUserId", None),
+            "instagram_profile": input_arguments.get("instagramProfile", None)
         }
     })
 
@@ -197,7 +198,8 @@ def create_identified_user(**kwargs) -> AnyStr:
         whatsapp_profile,
         whatsapp_username,
         instagram_private_username,
-        vk_user_id
+        vk_user_id,
+        instagram_profile
     ) values (
         %(identified_user_first_name)s,
         %(identified_user_last_name)s,
@@ -212,7 +214,8 @@ def create_identified_user(**kwargs) -> AnyStr:
         %(whatsapp_profile)s,
         %(whatsapp_username)s,
         %(instagram_private_username)s,
-        %(vk_user_id)
+        %(vk_user_id),
+        %(instagram_profile)s
     ) returning
         identified_user_id::text;
     """
@@ -299,7 +302,8 @@ def get_identified_user_data(**kwargs) -> Any:
         identified_users.whatsapp_profile::text,
         identified_users.whatsapp_username::text,
         identified_users.instagram_private_username::text,
-        identified_users.vk_user_id::text
+        identified_users.vk_user_id::text,
+        identified_users.instagram_profile::text
     from
         users
     left join identified_users on

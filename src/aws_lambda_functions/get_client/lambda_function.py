@@ -232,6 +232,11 @@ def get_client_data(**kwargs) -> Any:
             and users.unidentified_user_id is null then identified_users.vk_user_id::text
             else null
         end as vk_user_id,
+        case
+            when users.identified_user_id is not null
+            and users.unidentified_user_id is null then identified_users.instagram_profile::text
+            else null
+        end as instagram_profile,
         genders.gender_id::text,
         genders.gender_technical_name::text,
         genders.gender_public_name::text
